@@ -1,0 +1,1116 @@
+================================================================================
+PORTFOLIO GAME — TOP-NOTCH REVISION MASTER PLAN
+"The Interactive Odyssey" — Full Phased Rebuild Spec
+================================================================================
+Target repo: portfolio-3 (Next.js 16 / React 19 / three.js / react-three-fiber /
+              framer-motion, canvas-based 2D platformer + r3f 3D set-pieces)
+
+--------------------------------------------------------------------------------
+0. HOW TO USE THIS DOCUMENT
+--------------------------------------------------------------------------------
+This is written as a build prompt, not a wishlist. It is organized into 7 phases
+(0-6), each independently shippable and independently verifiable. Feed ONE
+PHASE AT A TIME to your coding agent (Claude Code / Antigravity / etc). Do not
+paste the whole document into one agent turn — the codebase is large enough
+(40KB main component, dedicated physics engine, 4 existing minigames, 60+
+content entries) that an agent doing everything at once will lose the thread
+and silently break existing mechanics.
+
+For each phase:
+  1. Paste that phase's section into the agent, plus the "FILES TOUCHED" list.
+  2. Let it implement.
+  3. Run `npm run dev`, click through the DONE-WHEN checklist at the end of
+     the phase.
+  4. Only then move to the next phase.
+
+Two housekeeping notes before you start:
+  - AGENTS.md in this repo says this project's Next.js version has breaking
+    API changes vs. training data ("This is NOT the Next.js you know"). Any
+    agent touching routing/App Router APIs should read
+    node_modules/next/dist/docs/ first, per that file's own instructions.
+  - The repo root has four one-off patch scripts (inject_physics.js,
+    update_content.js, rewrite_renderer.js, fix_deadlock.js). Their edits are
+    already applied to the live files (verified: squash-and-stretch is in
+    Renderer.js, recruiter-skip is in PortfolioGame.jsx). They're dead weight
+    now — delete them in Phase 0 to stop confusing future agents into
+    re-running them.
+
+--------------------------------------------------------------------------------
+1. DESIGN PRINCIPLES (non-negotiable, apply to every phase)
+--------------------------------------------------------------------------------
+P1. JUICE OVER JANK. Every interaction gets: anticipation (wind-up) -> impact
+    (hit-stop/flash) -> follow-through (particles/settle). The game already
+    does this partially (hitStop, shakeTimer, squash-and-stretch exist) —
+    extend the pattern, don't replace it.
+
+P2. TWO RENDERING ARCHITECTURES, ONE CONTENT PIPELINE. This codebase has a
+    hand-rolled 2D canvas engine (Engine.js/Renderer.js) AND several
+    react-three-fiber scenes (GlobeGallery, MagicalPortal, SkillTree,
+    Holocron). "Playable for both architectures" means: the SAME piece of
+    content (a project, a cert, an achievement) can be triggered from a 2D
+    hop AND from a 3D node-click, runs the SAME minigame, and lands on the
+    SAME reveal card. Right now GlobeGallery and Holocron bypass minigames
+    entirely and just pop a flat image/card — that inconsistency is the
+    single biggest architectural gap to close (Phase 5).
+
+P3. NEVER BLOCK THE RECRUITER. The existing "RECRUITER SKIP" button and
+    per-minigame ESC/auto-skip timers are a deliberately smart feature for a
+    placement portfolio — a hiring manager must never be forced through a
+    minigame. Every new minigame keeps: ESC-to-skip, a hard auto-skip timeout
+    (~4-6s), and full function under prefers-reduced-motion. This is a hard
+    requirement, not a nice-to-have.
+
+P4. PERFORMANCE IS A FEATURE. Adding 3D everywhere on top of an already-busy
+    2D canvas loop can tank frame rate on the exact mid-range Android phones
+    a recruiter might use. Every new visual effect is gated behind a
+    graphics-tier check (Phase 0). Ship adaptive quality, not a demo that
+    only runs on your M1 Air.
+
+P5. USE WHAT'S ALREADY PAID FOR. @react-three/postprocessing is a listed
+    dependency and is currently imported NOWHERE in src/. That's a free
+    bloom/vignette upgrade sitting unused. Similarly, groq-sdk is a listed
+    dependency with zero imports anywhere and no API routes exist — see
+    Appendix C for a stretch idea that finally uses it.
+
+P6. CONTENT STAYS TRUTHFUL. All copy, stats, and links in gameContent.js are
+    real achievements — no new phase should invent fake data. Where new
+    fields are needed (rarity, matchIcons, codeSnippet) they're derived from
+    existing fields wherever possible (see Phase 1.3's auto-rarity mapper).
+
+--------------------------------------------------------------------------------
+2. CURRENT-STATE AUDIT (grounded in the actual code — read before building)
+--------------------------------------------------------------------------------
+WHAT'S ALREADY GENUINELY GOOD (do not throw away):
+  - Real physics: coyote-time jumping, jump buffering, squash-and-stretch,
+    friction — Engine.js / PortfolioGame.jsx `update()`.
+  - A full custom audio-synth SFX layer (layered oscillators, no sample
+    files) — sfxJump/sfxCoin/sfxBlock/etc.
+  - An aura VFX system already abstracted into pure functions
+    (AuraSystem.js: git-graph trail, binary/hex rain, circuit-burst
+    particles, time-of-day sky drift) — this is exactly the right pattern to
+    replicate for new effects.
+  - A real preloader with progress bar, not a spinner.
+  - Recruiter Skip + per-zone minimap + best-time persistence.
+  - Three separate r3f 3D scenes already exist (GlobeGallery finale,
+    MagicalPortal card backdrop, SkillTree 3D tech tree) — the 3D
+    infrastructure is there, it's just disconnected from the main loop.
+
+WHAT'S HOLDING IT BACK (the actual gaps this plan closes):
+  - THE REVEAL MOMENT IS FLAT. Hitting a `?` block calls `proceedToCard()`
+    which sets `activeCard` -> renders `.content-card`, a static bordered
+    div (PortfolioGame.jsx line ~771). No 3D, no physical "opening"
+    feeling — the literal thing you asked to fix.
+  - proceedToCard's setup logic (open card + trigger the canvas "takeover"
+    background zoom) is COPY-PASTED FOUR TIMES: in handleCanvasClick
+    (~L238-246), the Enter-key handler (~L344-356 and ~L360-371), and the
+    block/portal/photo collision handler (~L472-476). One bug fix has to be
+    made in four places today.
+  - Certs have no minigame at all. `getMinigameCategory()` returns null for
+    every cert_* key — they're either a passive `hover` proximity reveal
+    (7 of them) or the single `cert_holo` portal into Holocron, which itself
+    just swaps a flat `<img>` on click. This is exactly the "no fun hop, no
+    play" you described.
+  - HOLOCRON AND GAMECONTENT.JS HAVE TWO DIVERGED CERT DATABASES.
+    Holocron.jsx hardcodes its own `CERTS` array pointing at
+    /public/files/*.png (the real, full-resolution cert scans, verified
+    3308x2520 to 7090x5080px, 780KB-4MB each). Meanwhile
+    gameContent.js's BLOCK_CONTENT.cert_* entries have the richer
+    badge/desc/narration copy but point at generic /preview-N.webp photos
+    instead of the actual certificates. Two sources of truth, out of sync.
+  - /public/certs/ IS DEAD. Confirmed unreferenced anywhere in src/, and 3 of
+    its 7 files (ps_cert.png, python_cert.png, sql_cert.png) are byte-for-
+    byte identical placeholder stubs (same MD5 hash, 800x450 WebP). Clean up
+    or repurpose in Phase 5/0.
+  - THE 3D SCENES SKIP MINIGAMES ENTIRELY. GlobeGallery's node click and
+    Holocron's cert click both go straight to a reveal, bypassing the
+    quiz/decrypt/rhythm layer the 2D run uses for the same content. This is
+    the direct cause of the "two disconnected architectures" feeling.
+  - NO DEVICE-PIXEL-RATIO HANDLING. Confirmed: `canvas.width = W` uses raw
+    window.innerWidth with zero devicePixelRatio scaling anywhere in the
+    codebase. On any Retina/high-DPI screen (including your own M1 Air, and
+    most phones sold since 2018) the game canvas renders visibly softer than
+    the crisp DOM UI sitting on top of it. This is a ~20-line fix with an
+    outsized effect on "does this look premium." Do it first — see Phase 4.1.
+  - @react-three/postprocessing installed, zero imports. Free bloom sitting
+    on the table.
+  - Zone differentiation is a color palette swap, not a biome. `ZONES` in
+    gameContent.js differ only by 6 hex values; `drawBackgroundElements`
+    only branches on 3 buckets (AGRICULTURE / *MEMORIES* / everything else)
+    — PROJECTS, SKILLS, HACKATHONS, CERTS, CONTACT all render the same
+    generic "tech skyline."
+  - Minigames are 3 flavors (quiz/decrypt/rhythm) reused across
+    thematically unrelated content, and none of them exist in a 3D-native
+    form for when they're triggered from inside an already-3D scene.
+
+--------------------------------------------------------------------------------
+3. TARGET ARCHITECTURE AT A GLANCE
+--------------------------------------------------------------------------------
+NEW DEPENDENCIES (Phase 0):
+    zustand                  -- shared state between the 2D canvas loop and
+                                 every r3f scene, so they stop being islands
+    @use-gesture/react        -- unified pointer/drag/touch handling for the
+                                 new drag-based minigames (works with mouse
+                                 AND touch out of the box — important, this
+                                 game already cares a lot about mobile parity)
+ALREADY INSTALLED, NEWLY USED:
+    @react-three/postprocessing  -- Bloom/Vignette on every r3f scene
+
+NEW FOLDER STRUCTURE (additions only, nothing existing is deleted):
+    src/
+      state/
+        gameStore.js                 <- zustand store (Phase 1)
+      lib/
+        detectGraphicsTier.js        <- perf tier detection (Phase 0)
+        rarity.js                    <- badge -> rarity auto-mapper (Phase 1)
+      hooks/
+        useCardTilt.js                <- pointer-tilt hook for holo cards (Phase 2)
+      components/
+        game/
+          reveal/
+            CrateReveal.jsx           <- CSS-3D crate open (Phase 2)
+            HolographicCard.jsx       <- new card component (Phase 2)
+            CrystalShatterReveal.jsx  <- r3f shatter, for legendary/portal (Phase 2)
+        minigames/
+          registry.js                 <- category -> component lookup (Phase 3)
+          circuitSplice/
+            useCircuitPuzzle.js
+            CircuitSplice2D.jsx
+            CircuitSplice3D.jsx
+          memoryLattice/
+            useMemoryLattice.js
+            MemoryLattice2D.jsx
+            MemoryLattice3D.jsx
+          signalLock/
+            SignalLock.jsx
+          terminalBreach/
+            TerminalBreach.jsx
+
+CORE PATTERN — "logic hook + dumb 2D view + dumb 3D view": every new
+minigame is one plain-JS hook holding state/rules, plus two presentational
+components that both consume it. This is THE concrete answer to "playable
+for both architectures" — spelled out in full in Phase 3.1, then reused for
+the rest.
+
+--------------------------------------------------------------------------------
+PHASE 0 — DEPENDENCIES, HOUSEKEEPING, QUALITY-TIER DETECTION
+--------------------------------------------------------------------------------
+FILES TOUCHED: package.json (edit), src/lib/detectGraphicsTier.js (new),
+root cleanup (delete 4 files), public/certs/ (review)
+
+0.1 Install:
+    npm install zustand @use-gesture/react
+
+0.2 Delete the applied one-off patch scripts from the repo root:
+    inject_physics.js, update_content.js, rewrite_renderer.js,
+    fix_deadlock.js
+    (Confirm first that their diffs are already live — they are, per the
+    audit above — then remove them so they don't get re-run by accident.)
+
+0.3 /public/certs/ — 3 of 7 files are identical placeholder stubs and the
+    folder is referenced nowhere. Either delete it, or (better) replace its
+    contents with real exports of the same 7 certs at a WEB-APPROPRIATE
+    resolution (see Phase 5.3 — you'll want these anyway once you fix the
+    Holocron texture-size problem).
+
+0.4 Create the graphics-tier detector:
+
+    // src/lib/detectGraphicsTier.js
+    export function detectGraphicsTier() {
+      if (typeof window === "undefined") return "medium";
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "low";
+
+      const mem = navigator.deviceMemory || 4;        // GB, Chrome-only; 4 = safe default
+      const cores = navigator.hardwareConcurrency || 4;
+      const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+      if (mem <= 2 || cores <= 4) return "low";
+      if (isMobile || mem <= 4) return "medium";
+      return "high";
+    }
+
+    Tier meanings used throughout the rest of this plan:
+      low    -> no postprocessing, capped particle counts, DPR capped at 1,
+                CrateReveal uses CSS only (skip CrystalShatterReveal's r3f
+                variant, fall back to the CSS crate even for legendary items)
+      medium -> postprocessing on for 3D set-pieces only (Holocron/SkillTree/
+                Globe), DPR capped at 1.5, full particle counts
+      high   -> everything on, DPR capped at 2
+
+DONE WHEN:
+  [ ] npm run dev boots with zustand + @use-gesture/react resolvable
+  [ ] the 4 root patch scripts are gone; git diff shows no functional change
+  [ ] detectGraphicsTier() returns a sane value when logged on your Mac and
+      when tested via Chrome DevTools device emulation (throttled mobile)
+
+--------------------------------------------------------------------------------
+PHASE 1 — CORE SYSTEMS REFACTOR
+(unglamorous, but everything else depends on this being right)
+--------------------------------------------------------------------------------
+FILES TOUCHED: src/state/gameStore.js (new), src/lib/rarity.js (new),
+src/data/gameContent.js (edit — schema additions), PortfolioGame.jsx
+(edit — collapse the 4 duplicated trigger blocks into one)
+
+1.1 Shared state store. Right now progress/settings live in ~15 separate
+    useState hooks inside PortfolioGame.jsx and localStorage is read/written
+    ad hoc (bestTime only). The 3D scenes (GlobeGallery, Holocron, SkillTree)
+    have no access to any of it. Centralize:
+
+    // src/state/gameStore.js
+    "use client";
+    import { create } from "zustand";
+    import { persist } from "zustand/middleware";
+
+    export const useGameStore = create(
+      persist(
+        (set, get) => ({
+          // ---- persisted progress ----
+          unlockedKeys: [],          // contentKeys opened at least once
+          bestTime: null,
+          musicOn: true,
+          sfxOn: true,
+          graphicsTier: "auto",      // "auto" | "high" | "medium" | "low"
+
+          // ---- transient session (not persisted) ----
+          score: 0,
+          coins: 0,
+          activeContentKey: null,    // key currently mid-reveal
+          revealStage: "idle",       // idle | impact | crate | card
+          revealAnchor: null,        // {x, y, accent} screen coords, or null (3D-sourced)
+          revealSourceType: "2d",    // "2d" | "3d"
+          minigame: null,            // { category, contentKey, sourceType }
+
+          unlock: (key) => set((s) =>
+            s.unlockedKeys.includes(key) ? s : { unlockedKeys: [...s.unlockedKeys, key] }),
+          addScore: (n) => set((s) => ({ score: s.score + n })),
+          addCoins: (n) => set((s) => ({ coins: s.coins + n })),
+
+          startReveal: (key, anchor, sourceType = "2d") =>
+            set({ activeContentKey: key, revealAnchor: anchor, revealSourceType: sourceType, revealStage: "impact" }),
+          setRevealStage: (stage) => set({ revealStage: stage }),
+          endReveal: () => set({ activeContentKey: null, revealStage: "idle", revealAnchor: null }),
+
+          startMinigame: (category, contentKey, sourceType) =>
+            set({ minigame: { category, contentKey, sourceType } }),
+          endMinigame: () => set({ minigame: null }),
+        }),
+        {
+          name: "portfolio-progress",
+          partialize: (s) => ({
+            unlockedKeys: s.unlockedKeys, bestTime: s.bestTime,
+            musicOn: s.musicOn, sfxOn: s.sfxOn, graphicsTier: s.graphicsTier,
+          }),
+        }
+      )
+    );
+
+    Migrate the existing `localStorage.getItem("portfolioBestTime")` call
+    over to this store's persisted `bestTime` field (delete the manual
+    localStorage read/write in PortfolioGame.jsx once migrated).
+
+1.2 UNIFY THE FOUR DUPLICATED TRIGGER BLOCKS into one function. Today,
+    "open a piece of content" is implemented four separate times inside
+    PortfolioGame.jsx (handleCanvasClick, the block-hit collision handler,
+    the Enter-key proximity handler, and the portal/photo overlap handler),
+    each manually setting up `takeover`/`proceedToCard`. Replace all four
+    call sites with:
+
+    function triggerContent(b, content, sourceType = "2d") {
+      const category = getMinigameCategory(b.contentKey);
+      const anchor = b.screenX != null
+        ? { x: b.screenX + b.w / 2, y: b.screenY, accent: getZone(b.x).accent }
+        : null; // null = 3D-sourced trigger, reveal anchors to screen-center instead
+
+      useGameStore.getState().startReveal(b.contentKey, anchor, sourceType);
+      if (content.vehicle) setVehicles(v => [...v, { emoji: content.vehicle, y: Math.random()*200+100, t: Date.now() }]);
+
+      if (category) {
+        useGameStore.getState().startMinigame(category, b.contentKey, sourceType);
+      } else {
+        useGameStore.getState().setRevealStage("crate"); // straight to Phase 2's reveal
+      }
+    }
+
+    This single change is what makes Phase 5 (Globe/Holocron/SkillTree
+    parity) trivial instead of another four-way copy-paste — 3D triggers
+    just call `triggerContent(syntheticBlock, content, "3d")` with a
+    synthetic `{ contentKey, w: 0 }` object (no screenX needed, anchor
+    resolves to null -> screen-center per the code above).
+
+1.3 Content schema additions in gameContent.js. Add three fields per
+    BLOCK_CONTENT entry (all optional, all with sane auto-derived
+    fallbacks so you don't have to hand-edit 60+ entries):
+
+      revealStyle:  "crate" | "crystal" | "scroll"   (default "crate")
+                    - "crystal" for capstone/legendary entries (argus,
+                      verifarm, cert_holo) -> routes to
+                      CrystalShatterReveal (r3f) in Phase 2
+                    - "scroll" for `photo`-type memory-wall entries -> a
+                      simpler unfurl animation, no crate needed
+      matchIcons:   string[] (3-4 short labels/emoji) — used by Memory
+                    Lattice (Phase 3). Auto-fallback: derive from the first
+                    3-4 entries of `content.tech`, or a generic tech-emoji
+                    set if `tech` is absent.
+      codeSnippet:  { template, blanks: string[], bank: string[] } — used
+                    by Terminal Breach (Phase 3). Only needed for entries
+                    that route to that minigame category (see 3.4); can be
+                    generated per-project from real commands already
+                    sitting in CLI_COMMANDS for thematic consistency.
+
+    Add an auto-rarity mapper instead of hand-tagging every entry:
+
+    // src/lib/rarity.js
+    export function deriveRarity(content) {
+      const badge = (content.badge || "").toLowerCase();
+      if (badge.includes("🥇") || badge.includes("capstone") || badge.includes("1st")) return "legendary";
+      if (badge.includes("🥈") || badge.includes("2nd")) return "epic";
+      if (badge.includes("🥉") || badge.includes("3rd") || badge.includes("top 5")) return "rare";
+      return "common";
+    }
+
+    Rarity drives reveal intensity and card-border treatment in Phase 2 —
+    it does NOT need to be stored in data at all; compute it at render time
+    from the badge text that already exists on every entry.
+
+DONE WHEN:
+  [ ] grep for "proceedToCard" shows ONE definition, not logic duplicated
+      across 4 call sites
+  [ ] bestTime persists via the zustand store, manual localStorage code removed
+  [ ] deriveRarity(content) returns "legendary" for argus/verifarm/
+      hack_advaya and "common" for e.g. contact_email
+  [ ] existing gameplay (jumping, hitting blocks, opening cards) still works
+      identically to before this phase — this is a refactor, not a feature
+      change, so a side-by-side play-test should feel unchanged
+
+--------------------------------------------------------------------------------
+PHASE 2 — THE FLAGSHIP: 3D CRATE-OPEN + HOLOGRAPHIC CARD REVEAL
+(this is the single highest-impact change you asked for)
+--------------------------------------------------------------------------------
+FILES TOUCHED: src/hooks/useCardTilt.js (new), src/components/game/reveal/*
+(new, 3 files), src/app/globals.css (add ~120 lines), PortfolioGame.jsx
+(replace the activeCard render block), src/components/game/MagicalPortal.jsx
+(extended, not replaced)
+
+DESIGN CHOICE, STATED UP FRONT: don't spin up a full three.js <Canvas> for
+every single one of the ~40 "block"-type reveals — that's 40 potential WebGL
+contexts fighting the already-busy 2D game canvas, which will hurt frame
+rate especially on mobile. Instead:
+  - Common reveals (block/hover/photo types, ~50 entries) get a CHEAP,
+    GPU-accelerated CSS-3D crate (real perspective/rotateX/rotateY, no
+    WebGL). Feels fully 3D to the player, costs almost nothing.
+  - High-value reveals (revealStyle: "crystal" — capstone projects, 1st-
+    place wins, cert_holo) get the full r3f CrystalShatterReveal treatment,
+    reusing the icosahedron/particle code that already exists in
+    MagicalPortal.jsx instead of writing new three.js boilerplate.
+This is a deliberate performance/spectacle tradeoff: save the heaviest
+effect for the moments that matter most.
+
+2.1 Reveal state machine (consumes Phase 1's store):
+    idle -> impact (existing hitStop/shake/particle burst, keep as-is,
+             just extend hitStop from ~2 frames to ~4-5 for more weight
+             on "crate" reveals specifically) -> crate (~650ms) -> card
+
+2.2 useCardTilt — pointer-tilt for the holographic card:
+
+    // src/hooks/useCardTilt.js
+    import { useRef, useCallback, useState } from "react";
+
+    export function useCardTilt({ max = 14, scale = 1.03 } = {}) {
+      const ref = useRef(null);
+      const [style, setStyle] = useState({});
+
+      const onMouseMove = useCallback((e) => {
+        const el = ref.current; if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const px = (e.clientX - rect.left) / rect.width;
+        const py = (e.clientY - rect.top) / rect.height;
+        const rotateY = (px - 0.5) * max * 2;
+        const rotateX = (0.5 - py) * max * 2;
+        setStyle({
+          transform: `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`,
+          "--sheen-x": `${px * 100}%`, "--sheen-y": `${py * 100}%`,
+        });
+      }, [max, scale]);
+
+      const onMouseLeave = useCallback(() => {
+        setStyle({ transform: "perspective(900px) rotateX(0) rotateY(0) scale(1)", "--sheen-x": "50%", "--sheen-y": "50%" });
+      }, []);
+
+      return { ref, style, onMouseMove, onMouseLeave };
+    }
+
+    On touch devices, skip the tilt (no hover) and just keep the static
+    entrance animation — check `'ontouchstart' in window` and short-circuit.
+
+2.3 CrateReveal — CSS-3D box that flies up, spins, and cracks open:
+
+    /* globals.css additions */
+    .crate-reveal-stage { position: fixed; inset: 0; display: flex;
+      align-items: center; justify-content: center; z-index: 9998;
+      pointer-events: none; perspective: 1000px; }
+
+    .crate { position: relative; width: 84px; height: 84px;
+      transform-style: preserve-3d; animation: crate-spin 0.65s cubic-bezier(.2,.9,.3,1); }
+    .crate-face { position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      font-family: var(--pixel); font-size: 22px; color: #fff;
+      background: linear-gradient(135deg, var(--zone-accent, #00ffff), #0a0a15);
+      border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 0 20px var(--zone-accent, #00ffff) inset; }
+    .crate-face.front  { transform: translateZ(42px); }
+    .crate-face.back   { transform: translateZ(-42px) rotateY(180deg); }
+    .crate-face.right  { transform: rotateY(90deg)  translateZ(42px); }
+    .crate-face.left   { transform: rotateY(-90deg) translateZ(42px); }
+    .crate-face.top    { transform: rotateX(90deg)  translateZ(42px); }
+    .crate-face.bottom { transform: rotateX(-90deg) translateZ(42px); }
+
+    @keyframes crate-spin {
+      from { transform: rotateX(0) rotateY(0) translateY(60px) scale(0.3); opacity: 0; }
+      to   { transform: rotateX(720deg) rotateY(360deg) translateY(0) scale(1); opacity: 1; }
+    }
+    .crate.cracking .crate-face.top    { animation: crack-top 0.45s ease-in forwards; }
+    .crate.cracking .crate-face.bottom { animation: crack-bottom 0.45s ease-in forwards; }
+    .crate.cracking .crate-face.front,
+    .crate.cracking .crate-face.back,
+    .crate.cracking .crate-face.left,
+    .crate.cracking .crate-face.right { animation: crack-side 0.4s ease-in forwards; }
+    @keyframes crack-top    { to { transform: rotateX(90deg) translateZ(42px) translateY(-160px) rotateZ(-30deg); opacity: 0; } }
+    @keyframes crack-bottom { to { transform: rotateX(-90deg) translateZ(42px) translateY(160px) rotateZ(30deg); opacity: 0; } }
+    @keyframes crack-side   { to { opacity: 0; filter: brightness(3); } }
+
+    // src/components/game/reveal/CrateReveal.jsx
+    "use client";
+    import { useEffect, useState } from "react";
+    const FACES = ["front", "back", "right", "left", "top", "bottom"];
+
+    export default function CrateReveal({ accent = "#00ffff", anchor, onDone, reducedMotion }) {
+      const [cracking, setCracking] = useState(false);
+
+      useEffect(() => {
+        if (reducedMotion) { onDone?.(); return; } // skip straight to card
+        const t1 = setTimeout(() => setCracking(true), 620);
+        const t2 = setTimeout(() => onDone?.(), 1080);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+      }, [onDone, reducedMotion]);
+
+      const stageStyle = anchor
+        ? { justifyContent: "flex-start", alignItems: "flex-start" }
+        : {};
+      const boxStyle = anchor
+        ? { position: "absolute", left: anchor.x - 42, top: anchor.y - 42 }
+        : {};
+
+      return (
+        <div className="crate-reveal-stage" style={stageStyle}>
+          <div className={`crate ${cracking ? "cracking" : ""}`}
+               style={{ "--zone-accent": accent, ...boxStyle }}>
+            {FACES.map(f => (
+              <div key={f} className={`crate-face ${f}`}>{f === "front" ? "?" : ""}</div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+2.4 HolographicCard — replaces the flat `.content-card`:
+
+    /* globals.css additions */
+    .holo-card { position: relative; overflow: hidden; border-radius: 14px;
+      transition: transform 0.12s ease-out; transform-style: preserve-3d; }
+    .holo-card::before { content: ""; position: absolute; inset: 0; z-index: 2;
+      pointer-events: none; mix-blend-mode: color-dodge; opacity: 0.5;
+      background:
+        radial-gradient(circle at var(--sheen-x,50%) var(--sheen-y,50%), rgba(255,255,255,.35), transparent 45%),
+        conic-gradient(from 180deg at var(--sheen-x,50%) var(--sheen-y,50%),
+          #ff006e33, #00ffff33, #bf00ff33, #39ff1433, #ff006e33); }
+    .holo-card[data-rarity="epic"]::before      { opacity: 0.65; }
+    .holo-card[data-rarity="legendary"]::before { opacity: 0.9; animation: holo-shift 3s linear infinite; }
+    @keyframes holo-shift { to { filter: hue-rotate(360deg); } }
+    .holo-card[data-rarity="legendary"] { box-shadow: 0 0 40px var(--zone-accent, #00ffff); }
+
+    // src/components/game/reveal/HolographicCard.jsx
+    "use client";
+    import { motion } from "framer-motion";
+    import { useCardTilt } from "../../../hooks/useCardTilt";
+    import { deriveRarity } from "../../../lib/rarity";
+
+    const container = { hidden: {}, show: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } };
+    const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
+
+    export default function HolographicCard({ content, accent, onClose, children }) {
+      const rarity = deriveRarity(content);
+      const isTouch = typeof window !== "undefined" && "ontouchstart" in window;
+      const tilt = useCardTilt();
+
+      return (
+        <motion.div
+          className="holo-card"
+          data-rarity={rarity}
+          style={{ "--zone-accent": accent, ...(isTouch ? {} : tilt.style) }}
+          ref={isTouch ? undefined : tilt.ref}
+          onMouseMove={isTouch ? undefined : tilt.onMouseMove}
+          onMouseLeave={isTouch ? undefined : tilt.onMouseLeave}
+          initial={{ opacity: 0, scale: 0.3, filter: "blur(20px)" }}
+          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+          transition={{ type: "spring", stiffness: 180, damping: 20 }}
+        >
+          <motion.div variants={container} initial="hidden" animate="show">
+            {children /* existing badge/title/subtitle/stats/desc/narration/
+                          tech/links markup moves here unchanged, each direct
+                          child wrapped in <motion.div variants={item}> for
+                          the staggered reveal */}
+          </motion.div>
+        </motion.div>
+      );
+    }
+
+    NOTE: this deliberately keeps ALL existing card content (badge, title,
+    stats, TypeWriter narration, tech chips, links) — only the shell and
+    entrance animation change. Don't drop any existing field.
+
+2.5 CrystalShatterReveal (r3f, for revealStyle: "crystal" only) — extend,
+    don't duplicate, MagicalPortal.jsx's existing MagicalCore/Particles:
+    add a `progress` ref driven by useFrame; at progress 0 the icosahedron
+    is intact and slowly rotating (reuse existing rotation code); past a
+    trigger point, spawn ~24 small tetrahedra at the core's position with
+    random outward velocity vectors, lerp their position outward and
+    opacity to 0 over ~500ms, then call onDone. Mount this only when
+    graphicsTier !== "low" (Phase 0); low-tier and revealStyle:"crystal"
+    still falls back to CrateReveal so nobody sees a blank screen.
+
+2.6 Wire into PortfolioGame.jsx — replace the current
+    `{activeCard && (...)}` block with:
+
+    {revealStage === "impact" && null /* existing hitStop/particles handle this beat */}
+    {revealStage === "crate" && (
+      (activeContent?.revealStyle === "crystal" && graphicsTier !== "low")
+        ? <CrystalShatterReveal accent={accent} onDone={() => setRevealStage("card")} />
+        : <CrateReveal accent={accent} anchor={revealAnchor} onDone={() => setRevealStage("card")} reducedMotion={prefersReducedMotion} />
+    )}
+    {revealStage === "card" && activeContent && (
+      <div className="card-overlay" onClick={closeCard}>
+        <HolographicCard content={activeContent} accent={accent} onClose={closeCard}>
+          {/* move existing card-content JSX here verbatim */}
+        </HolographicCard>
+      </div>
+    )}
+
+DONE WHEN:
+  [ ] every block type (block/portal/hover/photo) opens through
+      crate-or-crystal -> holographic card, not the old flat modal
+  [ ] tilting the card with the mouse visibly shifts the holo sheen
+  [ ] legendary items (argus, verifarm, hack_advaya) visibly look more
+      special than a contact_email block
+  [ ] ESC / click-outside still closes the card at any stage
+  [ ] with prefers-reduced-motion on, the crate stage is skipped entirely
+      and the card appears directly
+  [ ] frame rate holds during the crate animation on a throttled-4x CPU
+      DevTools profile
+
+--------------------------------------------------------------------------------
+PHASE 3 — FOUR NEW MINIGAMES, DUAL-ARCHITECTURE FROM DAY ONE
+--------------------------------------------------------------------------------
+FILES TOUCHED: src/components/minigames/registry.js (new),
+src/components/minigames/{circuitSplice,memoryLattice,signalLock,
+terminalBreach}/* (new), gameContent.js (extend getMinigameCategory mapping)
+
+HONEST SCOPING NOTE: "playable for both architectures" does not mean every
+minigame needs two fully separate hand-built implementations. The DOM-
+overlay minigames (existing QuizPopup/DecryptPuzzle and new SignalLock/
+TerminalBreach) already render identically whether the game behind them is
+the 2D canvas or a 3D <Canvas> — they're just a fixed-position layer on top.
+Real duplication effort is only worth it for the two concepts that are
+inherently spatial (Circuit Splice, Memory Lattice) AND get triggered from
+inside an already-3D scene (Holocron) — a flat DOM popup floating over a 3D
+backdrop there would look like the exact disconnect you're trying to fix.
+
+3.1 PATTERN, FULLY WORKED EXAMPLE — CIRCUIT SPLICE
+    (replaces DecryptPuzzle for hardware/security-flavored entries:
+    avangard, kavach, prashasan)
+
+    Mechanic: N output pins (left) must be dragged to their matching input
+    pin (right, pre-shuffled) before a countdown. Correct connection = spark
+    particle + tone; full match = solved.
+
+    Logic hook (shared by both views):
+
+    // src/components/minigames/circuitSplice/useCircuitPuzzle.js
+    import { useState, useCallback, useMemo } from "react";
+
+    export function useCircuitPuzzle(content, { pinCount = 4 } = {}) {
+      const pins = useMemo(() => {
+        const labels = (content.matchIcons?.length ? content.matchIcons
+          : ["A", "B", "C", "D"]).slice(0, pinCount);
+        return { outputs: labels, inputs: [...labels].sort(() => Math.random() - 0.5) };
+      }, [content, pinCount]);
+
+      const [connections, setConnections] = useState({});   // outputId -> inputId
+      const connect = useCallback((outputId, inputId) =>
+        setConnections(c => ({ ...c, [outputId]: inputId })), []);
+
+      const solved = pins.outputs.length > 0 &&
+        pins.outputs.every(o => connections[o] === o);
+
+      return { pins, connections, connect, solved };
+    }
+
+    2D view: SVG overlay, output pins as circles on the left edge, input
+    pins on the right edge, drag draws a live line (pointer events via
+    @use-gesture/react's useDrag), drop-on-target calls connect(). On
+    solved, fire a spark burst (reuse spawnCircuitBurst pattern from
+    AuraSystem.js) then onComplete(bonus).
+
+    3D view (CircuitSplice3D.jsx, mounted only when triggered from inside
+    Holocron/SkillTree): same hook, pins rendered as small emissive
+    <sphereGeometry> nodes positioned in a ring via the same Fibonacci-
+    lattice math GlobeGallery.jsx already uses, connections drawn with
+    drei's <Line>, dragging done via useThree's raycaster on pointer move.
+
+    THIS HOOK+2D-VIEW+3D-VIEW SPLIT IS THE TEMPLATE — replicate it for any
+    future minigame; don't build monolithic components again.
+
+3.2 MEMORY LATTICE (new — this is the direct answer to "hops to open
+    boxes to view certs" — becomes the primary CERTS-zone interaction)
+
+    Mechanic: a grid of face-down tiles built from content.matchIcons
+    (tech/skill glyphs relevant to that specific cert or project); flip two
+    at a time, matching pairs stay face-up; full match cracks the box open.
+
+    Core logic (useMemoryLattice.js): generate pairIds from matchIcons,
+    duplicate + shuffle into tiles[], track flipped (max 2 at a time) and
+    matched arrays; `isMatch = tiles[a].pairId === tiles[b].pairId`; win
+    when matched.length === tiles.length. Score bonus scales with speed,
+    consistent with the existing onComplete(bonus) pattern (see
+    QuizPopup's +250, RhythmTap's +200 — Memory Lattice should award on a
+    similar scale, e.g. 150-300 based on completion time).
+
+    2D view: CSS 3D flip tiles (transform-style: preserve-3d,
+    rotateY(180deg) toggle per tile) in a DOM grid — same technique family
+    as the CrateReveal cube from Phase 2, so the visual language stays
+    consistent.
+
+    3D view (used specifically when a cert is clicked inside Holocron):
+    literal floating planes in the existing r3f scene using drei's
+    <Float>, click-to-flip via onClick on each mesh — this feels native
+    inside a space that's already a 3D ring of floating cert planes,
+    rather than popping a flat DOM grid over it.
+
+    THIS is what should replace the current instant `onSelect ->
+    setSelectedCert` in Holocron.jsx (see Phase 5.2).
+
+3.3 SIGNAL LOCK (new — upgrades the single-bar RhythmTap concept for the
+    HACKATHONS zone, where the existing 6 blocks currently each show an
+    isolated, disconnected rhythm pop-up)
+
+    Mechanic: 3 concentric rings shrink from an outer radius toward a
+    target radius on staggered timers; tap/click when a ring crosses the
+    target band; chaining hits across all 3 rings gives a combo multiplier.
+    Fork RhythmTap.jsx's existing requestAnimationFrame + posRef/dirRef
+    skeleton rather than starting from scratch — same timing-loop shape,
+    just 3 rings instead of 1 bar:
+
+      ring.radius = OUTER_RADIUS * (1 - elapsedMs / lockDurationMs);
+      const inWindow = Math.abs(ring.radius - TARGET_RADIUS) < HIT_TOLERANCE;
+
+    Rendered as concentric SVG circles with a CSS radius transition — no
+    3D variant needed (see the "honest scoping" note above); it's a timing
+    game, spatial dimensionality doesn't add anything here.
+
+3.4 TERMINAL BREACH (reworks DecryptPuzzle from a pure watch-it-animate
+    scramble into an actual interactive puzzle, for entries that have a
+    codeSnippet field)
+
+    content.codeSnippet shape:
+      { template: "const res = await ___.chat.completions.___({",
+        blanks: ["groq", "create"],
+        bank: ["groq", "create", "fetch", "axios", "then"] }
+
+    Mechanic: show the template with blank slots, a shuffled token bank
+    below. IMPORTANT UX CALL: use click/tap-to-place-in-next-blank, NOT
+    HTML5 drag-and-drop — native DnD is unreliable on touch and this game
+    already goes out of its way to support mobile controls, don't regress
+    that. `checkSolution = blanks.every((ans, i) => filled[i] === ans)`.
+    On success: "> COMPILE SUCCESSFUL" terminal-green flash + existing
+    sfxBlock-style tone.
+
+    Derive codeSnippet content from the project's own real tech stack /
+    the existing CLI_COMMANDS array for thematic consistency (e.g. argus's
+    snippet pulled from its actual NATS/FastAPI stack) rather than generic
+    placeholder code — keeps it truthful per Design Principle P6.
+
+3.5 Registry — one lookup table instead of the current if/else chain in
+    PortfolioGame.jsx's `{minigame && minigame.category === "..." && <X/>}`
+    block:
+
+    // src/components/minigames/registry.js
+    import QuizPopup from "./QuizPopup";
+    import DecryptPuzzle from "./DecryptPuzzle";     // keep for entries not yet migrated
+    import RhythmTap from "./RhythmTap";             // keep as fallback / non-hackathon use
+    import Holocron from "./Holocron";
+    import CircuitSplice2D from "./circuitSplice/CircuitSplice2D";
+    import CircuitSplice3D from "./circuitSplice/CircuitSplice3D";
+    import MemoryLattice2D from "./memoryLattice/MemoryLattice2D";
+    import MemoryLattice3D from "./memoryLattice/MemoryLattice3D";
+    import SignalLock from "./signalLock/SignalLock";
+    import TerminalBreach from "./terminalBreach/TerminalBreach";
+
+    export const MINIGAME_REGISTRY = {
+      quiz:      { view2d: QuizPopup,      view3d: QuizPopup },
+      decrypt:   { view2d: TerminalBreach, view3d: TerminalBreach },
+      rhythm:    { view2d: SignalLock,     view3d: SignalLock },
+      holocron:  { view2d: Holocron,       view3d: Holocron },
+      circuit:   { view2d: CircuitSplice2D, view3d: CircuitSplice3D },
+      lattice:   { view2d: MemoryLattice2D, view3d: MemoryLattice3D },
+    };
+
+    Update getMinigameCategory() in gameContent.js: DECRYPT_KEYS ->
+    "circuit" (avangard/kavach/prashasan now play Circuit Splice instead of
+    the old auto-playing scramble), add a new CERT_KEYS Set mapping all
+    cert_* entries -> "lattice", keep RHYTHM_KEYS -> "rhythm" (now Signal
+    Lock) for the hackathon entries.
+
+DONE WHEN:
+  [ ] all 3 old minigame types still work where not explicitly migrated
+  [ ] every cert_* entry now plays Memory Lattice before revealing
+  [ ] avangard/kavach/prashasan play Circuit Splice
+  [ ] the 6 hackathon entries play Signal Lock with combo scoring
+  [ ] every new minigame: ESC skips, has an auto-skip timeout, and is
+      fully operable via touch (tap-based, not drag-only) on a real phone
+      or Chrome device-emulation
+  [ ] CircuitSplice3D and MemoryLattice3D render correctly when mounted
+      inside a test <Canvas>, not just visually implied
+
+--------------------------------------------------------------------------------
+PHASE 4 — ZONE BIOMES, LIGHTING & JUICE PASS
+--------------------------------------------------------------------------------
+FILES TOUCHED: PortfolioGame.jsx (DPR fix), Renderer.js (drawBackgroundElements
+extension), GlobeGallery.jsx / SkillTree.jsx / Holocron.jsx (postprocessing)
+
+4.1 DO THIS FIRST — DEVICE-PIXEL-RATIO FIX (confirmed absent anywhere in
+    the codebase; ~30 minutes of work, outsized visual impact). Currently
+    `canvas.width = window.innerWidth` with no DPR scaling means the game
+    renders soft/blurry on every Retina/high-DPI screen, including your own
+    Mac and most phones. Fix in the canvas-setup effect AND in `onResize`:
+
+      const dpr = Math.min(window.devicePixelRatio || 1, graphicsTier === "low" ? 1 : 2);
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // all existing draw calls stay in CSS-pixel coords
+
+4.2 Extend drawBackgroundElements() from its current 3 buckets
+    (AGRICULTURE / *MEMORIES* / default) into a real per-zone branch.
+    Worked example — PROJECTS zone currently renders flat silhouette
+    rectangles:
+
+      // current:
+      for (let i = 0; i < 25; i++) {
+        const bx = ((i*280) - camera.x*0.12) % (W+500) - 250;
+        const bw = 50 + (i*37)%90, bh = 30 + (i*53)%140;
+        const nx = ((bx % (W+500)) + W+500) % (W+500) - 250;
+        if (nx > -bw && nx < W+bw) ctx.fillRect(nx, GROUND_Y - bh, bw, bh);
+      }
+
+      // upgraded: same silhouette pass, plus deterministic lit windows
+      // (no per-frame randomness -> no flicker) and antenna beacons:
+      for (let i = 0; i < 25; i++) {
+        const bx = ((i*280) - camera.x*0.12) % (W+500) - 250;
+        const bw = 50 + (i*37)%90, bh = 30 + (i*53)%140;
+        const nx = ((bx % (W+500)) + W+500) % (W+500) - 250;
+        if (nx <= -bw || nx >= W+bw) continue;
+
+        ctx.fillStyle = "rgba(255,255,255,0.025)";
+        ctx.fillRect(nx, GROUND_Y - bh, bw, bh);
+
+        ctx.fillStyle = `${zone.accent}22`;
+        for (let wy = GROUND_Y - bh + 8; wy < GROUND_Y - 6; wy += 14)
+          for (let wx = nx + 6; wx < nx + bw - 6; wx += 12)
+            if ((Math.floor(wx)*7 + Math.floor(wy)*13 + i) % 5 === 0) ctx.fillRect(wx, wy, 4, 6);
+
+        if (i % 4 === 0) {
+          ctx.strokeStyle = "rgba(255,255,255,0.04)";
+          ctx.beginPath(); ctx.moveTo(nx+bw/2, GROUND_Y-bh); ctx.lineTo(nx+bw/2, GROUND_Y-bh-18); ctx.stroke();
+          ctx.fillStyle = "#ff006655";
+          ctx.beginPath(); ctx.arc(nx+bw/2, GROUND_Y-bh-18, 1.5+Math.sin(t*3)*0.5, 0, Math.PI*2); ctx.fill();
+        }
+      }
+
+    Apply the same "extend, don't rewrite" approach per zone:
+      EDUCATION  -> add a slow-drifting paper-plane/notebook-page particle
+                    layer (reuse the MEMORIES bokeh-particle loop shape,
+                    swap the shape drawn)
+      SKILLS     -> a faint upward "data stream" of the existing binary-
+                    rain glyphs (AuraSystem's drawBinaryRainState is
+                    already gated to PROJECTS/CERTS — extend its `active`
+                    check to include SKILLS at low opacity)
+      HACKATHONS -> 2-3 slow sweeping spotlight cones (radial gradients
+                    rotating slowly) + occasional gold confetti particle
+                    burst timed to zone entry, echoing the trophy theme
+      CERTS      -> drifting certificate-shaped glyph silhouettes (small
+                    rounded rects with a ribbon corner) in the existing
+                    binary-rain layer's particle slots
+      CONTACT    -> thin constellation lines connecting faint dots,
+                    foreshadowing the GlobeGallery finale's look
+
+4.3 Turn on the free bloom. Every r3f <Canvas> (GlobeGallery, SkillTree,
+    Holocron, and Phase 2's CrystalShatterReveal) gets:
+
+      import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+      ...
+      {graphicsTier !== "low" && (
+        <EffectComposer>
+          <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={0.6} mipmapBlur />
+          <Vignette eskil={false} offset={0.15} darkness={0.6} />
+        </EffectComposer>
+      )}
+
+4.4 HUD juice: animate score as a roll-up count (framer-motion's
+    useSpring/animate on the numeric value) instead of an instant snap;
+    give the coin counter a small scale-pop keyframe on increment; tie a
+    subtle screen-edge vignette pulse to the current zone's accent color
+    on zone-enter (reuses the zone-enter toast that already fires).
+
+DONE WHEN:
+  [ ] game canvas visibly sharper on a Retina display / phone
+  [ ] each zone has at least one visual element unique to it beyond a
+      color swap
+  [ ] Bloom is visibly active on emissive materials in Holocron/SkillTree
+      (compare before/after screenshots)
+  [ ] graphicsTier "low" still runs the whole game with these effects off,
+      no crashes, no missing content — just plainer visuals
+
+--------------------------------------------------------------------------------
+PHASE 5 — CROSS-ARCHITECTURE PARITY PASS
+(closes the gap between the 2D run and the 3D set-pieces — this is where
+"playable for both architectures" actually lands)
+--------------------------------------------------------------------------------
+FILES TOUCHED: GlobeGallery.jsx, Holocron.jsx, SkillTree.jsx, gameContent.js
+(cert data consolidation), asset pipeline for cert images
+
+5.1 GlobeGallery finale currently calls `onClick(data)` straight to
+    `onOpenCard`, skipping minigames entirely. Change GalleryNode to pass
+    the contentKey up, and change PortfolioGame.jsx's usage from:
+
+      onOpenCard={(c) => { setShowFinish(false); openCard(c); }}
+
+    to:
+
+      onOpenCard={(key) => {
+        setShowFinish(false);
+        triggerContent({ contentKey: key, w: 0 }, BLOCK_CONTENT[key], "3d");
+      }}
+
+    (This is exactly why Phase 1.2's unified triggerContent accepts a
+    synthetic block with no screenX — 3D-sourced triggers anchor to
+    screen-center automatically.) Now finishing the odyssey and clicking a
+    globe node plays the SAME minigame + reveal as encountering it in the
+    2D run, instead of an inconsistent instant popup.
+
+5.2 CONSOLIDATE THE TWO CERT DATABASES. Delete Holocron.jsx's local
+    hardcoded `CERTS` array. Import the 7 cert_* keys from gameContent.js
+    instead and drive the ring from BLOCK_CONTENT directly:
+
+      const CERT_KEYS = ["cert_ibm","cert_ethical","cert_aihr","cert_algo",
+                          "cert_hackerrank","cert_paper","cert_skillm"];
+
+    Reconcile the image field: BLOCK_CONTENT.cert_* currently point at
+    generic /preview-N.webp photos; Holocron's local array points at the
+    actual scanned certificates in /public/files/*.png. Use the real scans
+    as the authoritative `image` for each cert_* entry going forward (see
+    5.3 for required resizing first) — a portfolio's cert viewer should
+    show the real certificate, not a placeholder photo.
+
+    Replace Holocron's `onSelect={setSelectedCert}` (instant flat-image
+    modal) with a call into `triggerContent(...)` so selecting a cert
+    plane in the ring plays Memory Lattice 3D (Phase 3.2) before the
+    reveal, instead of an instant swap.
+
+5.3 FIX THE CERT TEXTURE SIZE PROBLEM. The real cert scans in
+    /public/files/ are 3308x2520 up to 7090x5080px, 780KB-4MB each, and
+    are currently loaded directly as three.js textures via
+    `useLoader(THREE.TextureLoader, cert.path)` with zero resizing. That's
+    an enormous GPU memory/bandwidth cost per texture, especially on
+    mobile, and risks exceeding max-texture-size on lower-end GPUs.
+    Pre-generate web-sized copies (max 2048px on the long edge, re-saved
+    as .webp, target under 300KB each) and point both the Holocron plane
+    textures AND the consolidated BLOCK_CONTENT.cert_* `image` fields at
+    the resized versions. Keep the originals somewhere off the public/
+    bundle (or behind a "view full resolution" link in the reveal card)
+    if full-quality download-for-verification matters for recruiters.
+
+5.4 SkillTree.jsx: `onNodeClick` currently swaps the info panel instantly
+    with no interaction. Gate the two most "advanced" nodes (llm, devops)
+    behind a lightweight Terminal Breach challenge (Phase 3.4) rendered via
+    SkillTree's existing <Html> overlay pattern — reinforces the "prove it"
+    feeling for the skills that matter most, while the simpler nodes
+    (py, js, db) stay instant so the tree doesn't feel gated to a fault.
+
+DONE WHEN:
+  [ ] finishing the run and clicking a globe node plays the correct
+      minigame before revealing, matching the 2D-run behavior for that
+      same content key
+  [ ] Holocron.jsx has no local CERTS array; gameContent.js is the only
+      source of cert data
+  [ ] cert reveal images are the real scanned certificates, not preview
+      placeholder photos, and load fast (check Network tab, <300KB each)
+  [ ] clicking a cert plane in Holocron plays Memory Lattice, not an
+      instant image swap
+  [ ] /public/certs/ is either removed or replaced with real, correctly
+      sized content — no more byte-identical placeholder stubs
+
+--------------------------------------------------------------------------------
+PHASE 6 — PERFORMANCE & MOBILE HARDENING
+(continuous concern, but do a dedicated final pass before calling this done)
+--------------------------------------------------------------------------------
+FILES TOUCHED: all new minigame/reveal components (touch-input audit),
+Renderer.js / AuraSystem.js (particle count gating), various <Canvas> mounts
+
+6.1 Gate every new particle system and postprocessing pass behind
+    graphicsTier, per the tier table defined in Phase 0.4. Specifically:
+    circuit-burst / neural-burst counts in AuraSystem.js, binary-rain
+    column density, CrystalShatterReveal's shard count (24 on high/medium,
+    skip entirely -> CrateReveal fallback on low).
+
+6.2 Touch-input audit: every new minigame must work with tap/touch, not
+    just mouse. @use-gesture/react (Phase 0.1) handles this for Circuit
+    Splice's drag interaction; Memory Lattice and Signal Lock are already
+    tap-native; Terminal Breach's click-to-place design (3.4) was chosen
+    specifically to avoid the touch problems of HTML5 drag-and-drop — don't
+    let an implementation slip back to native DnD.
+
+6.3 Bundle/asset audit: /public is ~37MB, dominated by the unresized cert
+    scans (fixed in 5.3) and the WhatsApp memory-wall photos. Run the
+    memory-wall photos through the same resize pass (5.3's approach) if
+    any exceed ~500KB — check with `file` / `ls -la` before assuming.
+
+6.4 Re-run the DPR fix (4.1) against the tier table: DPR capped at 1 on
+    low, 1.5 on medium, 2 on high — don't let a capable desktop render at
+    DPR 1 just because the cap was set globally instead of per-tier.
+
+6.5 Test matrix before calling any phase "done": desktop Chrome/Firefox,
+    iOS Safari (your iPhone 13 is a fine real device to test on), a
+    mid-range Android in Chrome DevTools 4x CPU throttle, and
+    prefers-reduced-motion toggled on, for every phase above.
+
+DONE WHEN:
+  [ ] Chrome Performance panel shows no dropped-frame runs longer than a
+      few frames during a crate-reveal + minigame sequence, 4x throttled
+  [ ] every drag/tap interaction confirmed working on a real touchscreen
+  [ ] Lighthouse mobile performance score checked before/after this phase
+      (don't need a specific number, just confirm it didn't regress)
+  [ ] reduced-motion users get a fully playable, minigame-skippable,
+      crate-skipping experience with no missing content
+
+================================================================================
+RECOMMENDED BUILD ORDER
+================================================================================
+Phase 0 -> Phase 1 -> Phase 2 -> Phase 7-equivalent data tweaks (folded into
+1.3/3.5/5.2 above, done alongside their consuming phase) -> Phase 3 ->
+Phase 5 -> Phase 4 (can actually interleave with any phase after 1, lowest
+architectural risk, but listed after 5 so zone-biome work doesn't have to
+be redone once parity fixes land) -> Phase 6 (continuous, hardened at the
+end).
+
+Reasoning: Phase 2 (the reveal system) doesn't need the new minigames to
+exist yet — content without a minigame category goes straight to
+crate-or-crystal, so you get the single biggest visual win early without
+waiting on Phase 3. Phase 5 (parity) needs Phase 3's minigames to exist
+first (Holocron needs Memory Lattice, Globe needs the general
+triggerContent pipeline from Phase 1) — build minigames before wiring them
+into the 3D scenes.
+
+================================================================================
+APPENDIX A — FILE-BY-FILE CHANGE MANIFEST
+================================================================================
+NEW FILES:
+  src/state/gameStore.js
+  src/lib/detectGraphicsTier.js
+  src/lib/rarity.js
+  src/hooks/useCardTilt.js
+  src/components/game/reveal/CrateReveal.jsx
+  src/components/game/reveal/HolographicCard.jsx
+  src/components/game/reveal/CrystalShatterReveal.jsx
+  src/components/minigames/registry.js
+  src/components/minigames/circuitSplice/useCircuitPuzzle.js
+  src/components/minigames/circuitSplice/CircuitSplice2D.jsx
+  src/components/minigames/circuitSplice/CircuitSplice3D.jsx
+  src/components/minigames/memoryLattice/useMemoryLattice.js
+  src/components/minigames/memoryLattice/MemoryLattice2D.jsx
+  src/components/minigames/memoryLattice/MemoryLattice3D.jsx
+  src/components/minigames/signalLock/SignalLock.jsx
+  src/components/minigames/terminalBreach/TerminalBreach.jsx
+
+SIGNIFICANTLY MODIFIED:
+  package.json                          (+zustand, +@use-gesture/react)
+  src/components/PortfolioGame.jsx      (unified triggerContent, DPR fix,
+                                          reveal-stage rendering, store wiring)
+  src/components/game/Renderer.js       (per-zone drawBackgroundElements)
+  src/components/game/GlobeGallery.jsx  (route through triggerContent, bloom)
+  src/components/game/SkillTree.jsx     (minigame-gated advanced nodes, bloom)
+  src/components/game/MagicalPortal.jsx (extended for CrystalShatterReveal)
+  src/components/minigames/Holocron.jsx (cert data consolidation, Memory
+                                          Lattice gating, resized textures)
+  src/components/minigames/DecryptPuzzle.jsx  (superseded by Circuit
+                                          Splice / Terminal Breach — keep
+                                          file for any un-migrated entries)
+  src/components/minigames/RhythmTap.jsx (superseded by Signal Lock — keep
+                                          file as fallback)
+  src/data/gameContent.js               (revealStyle/matchIcons/
+                                          codeSnippet fields, cert image
+                                          consolidation, updated
+                                          getMinigameCategory mapping)
+  src/app/globals.css                   (~150 new lines: crate-reveal,
+                                          holo-card, new minigame-box
+                                          variants)
+
+DELETED (housekeeping):
+  inject_physics.js, update_content.js, rewrite_renderer.js,
+  fix_deadlock.js (root — already-applied one-off patch scripts)
+
+REVIEWED / POSSIBLY DELETED:
+  public/certs/ (unused, partially placeholder — replace or remove)
+
+================================================================================
+APPENDIX B — DO-NOT-REGRESS LIST
+================================================================================
+Every phase must preserve these existing, deliberately-good decisions:
+  - Recruiter Skip button and its camera-jump-to-projects behavior
+  - ESC-to-skip and auto-skip timeout on every minigame, old and new
+  - prefers-reduced-motion fully disables hitStop/shake/crate-spin and
+    jumps straight to content, never leaves the player stuck
+  - Mobile d-pad/jump controls and swipe-to-jump gesture
+  - Best-time persistence across sessions
+  - The preloader progress bar reflecting real asset load state (extend it
+    to cover any new preloaded assets — resized cert textures, etc. — don't
+    let new content load silently without progress feedback)
+  - All existing copy/stats/links in gameContent.js remain factually
+    unchanged — only structural/presentation fields are added
+
+================================================================================
+APPENDIX C — OPTIONAL STRETCH IDEAS (not required, worth knowing about)
+================================================================================
+C1. groq-sdk is a listed dependency with zero imports anywhere and no API
+    routes exist in this project. The game already has an AI-guide
+    character (ARGUS, the 🤖 in the guide bubble) speaking scripted lines
+    from the GUIDE array. A genuinely differentiating stretch feature:
+    add a minimal Next.js API route that lets a recruiter type a question
+    to ARGUS ("what's his strongest project?") and get a live Groq-backed
+    answer grounded in gameContent.js's real data via a system prompt —
+    turning the existing guide character from scripted into actually
+    interactive. This would need its own scoped plan (rate limiting,
+    prompt grounding, a small chat UI) — flagging it here because the
+    dependency is already sitting there unused, suggesting it may have
+    been the original intent.
+
+C2. The minimap (.minimap-container) currently only shows zone markers and
+    player position. Once Phase 1's unlockedKeys tracking exists, add
+    small dots for unlocked-vs-locked content per zone on the minimap —
+    gives a real sense of completion progress at a glance.
+
+C3. Once Phase 5's parity pass is done, consider a "New Game+" toggle:
+    second playthrough starts with all zones unlocked and jumps straight
+    to Recruiter-Skip-style zone select, for a returning visitor who
+    doesn't want to replay the full platformer run.
+
+================================================================================
+END OF DOCUMENT
+================================================================================
