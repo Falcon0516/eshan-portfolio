@@ -782,9 +782,34 @@ export default function PortfolioGame() {
  \\____/ \\____/ \\_| |_\\_| |_/\\_| \\_/`}</pre>
           <p className="title-sub">A PLAYABLE PORTFOLIO</p>
           <p className="title-desc">Explore portals, memory walls, and biomes in this interactive odyssey.</p>
-          <div style={{display:'flex', gap:'20px', justifyContent:'center'}}>
-            <button className="title-start" onClick={startGame}>▶ PRESS START</button>
-            <button className="title-start" style={{background:'transparent', border:'1px solid #ff006e', color:'#ff006e'}} onClick={skipToHighlights}>▶ RECRUITER SKIP</button>
+          <div style={{display:'flex', gap:'20px', justifyContent:'center', marginTop: '20px', flexWrap: 'wrap'}}>
+            
+            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                style={{ position: 'absolute', top: '-40px', fontSize: '10px', color: '#00ffff', background: 'rgba(0,0,0,0.8)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #00ffff', whiteSpace: 'nowrap' }}
+              >
+                Want to explore and play?
+                <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #00ffff', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
+              </motion.div>
+              <button className="title-start" onClick={startGame}>▶ PRESS START</button>
+            </div>
+
+            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1, duration: 0.5 }}
+                style={{ position: 'absolute', top: '-40px', fontSize: '10px', color: '#ff006e', background: 'rgba(0,0,0,0.8)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #ff006e', whiteSpace: 'nowrap' }}
+              >
+                Are you a recruiter? View professional version
+                <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #ff006e', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
+              </motion.div>
+              <button className="title-start" style={{background:'transparent', border:'1px solid #ff006e', color:'#ff006e'}} onClick={() => window.open('/Eshan_Portfolio/index.html', '_blank')}>▶ RECRUITER SKIP</button>
+            </div>
+
           </div>
           <div className="title-controls"><kbd>←</kbd> <kbd>→</kbd> Move &bull; <kbd>SPACE</kbd> Jump &bull; <kbd>ENTER</kbd> Open Card</div>
         </div>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eshan H — Build Log</title>
+<meta name="description" content="Eshan H — engineer, builder, hackathon competitor. An interactive journey through curiosity, code, and competition.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Entry Animation Overlay -->
+<div class="preloader-overlay" id="preloaderOverlay">
+  <div class="preloader-logo">
+    <div class="preloader-mark">EH</div>
+    <div class="preloader-text">INITIALIZING...</div>
+  </div>
+</div>
+
+
+<!-- Custom cursor -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- 3D background canvas -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- Scanline / grain overlay -->
+<div class="crt-overlay"></div>
+
+<!-- Progress rail -->
+<div class="progress-rail">
+  <div class="progress-fill" id="progressFill"></div>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav class="topnav">
+  <div class="topnav-brand">
+    <span class="brand-mark">EH</span>
+    <span class="brand-status"><span class="dot-live"></span>SYSTEM ONLINE</span>
+  </div>
+  <div class="topnav-links">
+    <a href="#journey" data-nav>Journey</a>
+    <a href="#trophies" data-nav>Trophies</a>
+    <a href="#certifications" data-nav>Certifications</a>
+    <a href="#builds" data-nav>Builds</a>
+    <a href="#research" data-nav>Research</a>
+    <a href="#contact" data-nav>Contact</a>
+  </div>
+  <button class="agent-toggle" id="agentToggle">
+    <span class="agent-toggle-dot"></span>
+    ASK ARGUS
+  </button>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero-hud">
+    <div class="hud-line">LAT 12.9716° N — LNG 77.5946° E — BENGALURU, IN</div>
+    <div class="hud-line" id="clockLine">LOCAL TIME —:—:—</div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-profile-container">
+      <img src="../preview.webp" alt="Eshan H Profile" class="hero-profile-pic">
+      <div class="hero-profile-glow"></div>
+    </div>
+
+    <p class="hero-eyebrow">// BUILD LOG OF</p>
+    <h1 class="hero-title">
+      <span class="glyph-line" data-text="ESHAN">ESHAN</span>
+      <span class="glyph-line accent" data-text="H">H</span>
+    </h1>
+    <p class="hero-sub" id="heroTypewriter"></p>
+
+    <div class="hero-stats">
+      <div class="hstat">
+        <span class="hstat-num" data-count="10">0</span><span class="hstat-plus">+</span>
+        <span class="hstat-label">Hackathons Entered</span>
+      </div>
+      <div class="hstat">
+        <span class="hstat-num" data-count="5">0</span>
+        <span class="hstat-label">Podium Finishes</span>
+      </div>
+      <div class="hstat">
+        <span class="hstat-num" data-count="2">0</span>
+        <span class="hstat-label">Published Papers</span>
+      </div>
+      <div class="hstat">
+        <span class="hstat-num" data-count="9">0</span><span class="hstat-plus">.21</span>
+        <span class="hstat-label">CGPA</span>
+      </div>
+    </div>
+
+    <a href="#journey" class="hero-cta">
+      <span>BEGIN THE JOURNEY</span>
+      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 5 L7 10 L12 5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
+    </a>
+  </div>
+
+  <div class="scroll-cue">
+    <span>SCROLL</span>
+    <div class="scroll-cue-line"></div>
+  </div>
+</section>
+
+<!-- ============ ORIGIN ============ -->
+<section class="section origin section-animate" id="origin">
+  <div class="section-frame">
+    <p class="section-kicker">// LEVEL 0 — ORIGIN</p>
+    <h2 class="section-title">Where the curiosity began</h2>
+    <div class="origin-grid">
+      <div class="origin-copy">
+        <p>My grandfather was a civil engineer — he taught me to break big problems into solvable puzzles. My father is a farmer and a lecturer, and he showed me how knowledge and ground reality have to meet before anything meaningful happens. Between the two of them, I got a strange, useful inheritance: think in systems, but never forget who it's actually for.</p>
+        <p>I first started writing code on a <span class="hl-cyan">Samsung E3</span> — a basic Android phone, no real dev tools, just curiosity and a willingness to break things. That curiosity turned physical in 9th grade: I built a <span class="hl-cyan">production-grade automatic aquarium maintenance system</span> — feeding, lighting, power backup — that ran independently for six-plus weeks during the COVID-19 lockdown. That's where IoT got under my skin.</p>
+        <p class="origin-quote">"If something is important enough, you should try even if the probable outcome is failure."<span>— a philosophy I borrowed from Elon Musk, and now actually live by</span></p>
+      </div>
+      <div class="origin-visual">
+        <div class="node-timeline">
+          <div class="node-point active"><span class="node-year">Samsung E3</span><span class="node-desc">First lines of code, out of pure curiosity</span></div>
+          <div class="node-point active"><span class="node-year">9th Grade</span><span class="node-desc">Automated aquarium system — 6+ weeks, zero intervention</span></div>
+          <div class="node-point active"><span class="node-year">2023</span><span class="node-desc">Joined SJB Institute of Technology, CSE</span></div>
+          <div class="node-point active"><span class="node-year">2025 – 26</span><span class="node-desc">10+ hackathons, 2 published papers, 5 podiums</span></div>
+          <div class="node-point pulse"><span class="node-year">NOW</span><span class="node-desc">Looking for the next hard problem</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JOURNEY MAP (LEVEL SELECT) ============ -->
+<section class="section journey section-animate" id="journey">
+  <div class="section-frame">
+    <p class="section-kicker">// SELECT A LEVEL</p>
+    <h2 class="section-title">The journey, level by level</h2>
+    <p class="section-lede">This isn't a résumé timeline. It's a map. Pick a level — each one is a real chapter, with the receipts to prove it.</p>
+
+    <div class="level-map" id="levelMap">
+      <svg class="level-path" viewBox="0 0 1000 220" preserveAspectRatio="none">
+        <path d="M 30 110 C 200 30, 320 190, 500 110 S 800 30, 970 110" />
+      </svg>
+
+      <button class="level-node" style="--pos:6%" data-level="research">
+        <span class="level-node-ring"></span>
+        <span class="level-node-num">01</span>
+        <span class="level-node-label">The Research<br>Chapter</span>
+      </button>
+      <button class="level-node" style="--pos:28%" data-level="builds">
+        <span class="level-node-ring"></span>
+        <span class="level-node-num">02</span>
+        <span class="level-node-label">The Builder<br>Arc</span>
+      </button>
+      <button class="level-node" style="--pos:50%" data-level="streak">
+        <span class="level-node-ring"></span>
+        <span class="level-node-num">03</span>
+        <span class="level-node-label">The 30-Day<br>Streak</span>
+      </button>
+      <button class="level-node" style="--pos:72%" data-level="beyond">
+        <span class="level-node-ring"></span>
+        <span class="level-node-num">04</span>
+        <span class="level-node-label">Beyond<br>Code</span>
+      </button>
+      <button class="level-node" style="--pos:94%" data-level="contact">
+        <span class="level-node-ring"></span>
+        <span class="level-node-num">05</span>
+        <span class="level-node-label">Now /<br>Contact</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TROPHY CASE ============ -->
+<section class="section trophies section-animate" id="trophies">
+  <div class="section-frame">
+    <p class="section-kicker">// EVIDENCE LOCKER</p>
+    <h2 class="section-title">The trophy case</h2>
+    <p class="section-lede">Five wins. Thirty days. Real teams, real certificates — click any card to flip it.</p>
+
+    <div class="trophy-grid">
+
+      <div class="trophy-card">
+        <div class="trophy-inner">
+          <div class="trophy-face front">
+            <img class="trophy-img-bg" src="../preview-14.webp" alt="">
+            <img class="trophy-img-fg" src="../preview-14.webp" alt="ADVAYA 2.0 win">
+            <div class="trophy-badge gold">1st</div>
+            <div class="trophy-face-label">ADVAYA 2.0</div>
+          </div>
+          <div class="trophy-face back">
+            <h4>ADVAYA 2.0 — National Hackathon</h4>
+            <p>BGSCET · Cybersecurity &amp; Blockchain track · 24 hours</p>
+            <p class="trophy-detail">Team WARCRYPT walked out with ₹50,000 and 1st place, built alongside Priyanka H, Divya D, and Akshay K.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trophy-card">
+        <div class="trophy-inner">
+          <div class="trophy-face front">
+            <img class="trophy-img-bg" src="../preview-12.webp" alt="">
+            <img class="trophy-img-fg" src="../preview-12.webp" alt="HACK.ALGO win">
+            <div class="trophy-badge bronze">3rd</div>
+            <div class="trophy-face-label">HACK.ALGO 2026</div>
+          </div>
+          <div class="trophy-face back">
+            <h4>HACK.ALGO — Blockchain Hackathon</h4>
+            <p>GDG On Campus REVA University × Algorand Bharat · 60+ teams</p>
+            <p class="trophy-detail">Took on the hardest problem in the room — the x402 Client Wrapper — and built our own protocol layer on top of it as Team CleverFyre.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trophy-card">
+        <div class="trophy-inner">
+          <div class="trophy-face front">
+            <img class="trophy-img-bg" src="../preview-11.webp" alt="">
+            <img class="trophy-img-fg" src="../preview-11.webp" alt="AI-STHETICA AIVORA win">
+            <div class="trophy-badge silver">2nd</div>
+            <div class="trophy-face-label">AIVORA 2026</div>
+          </div>
+          <div class="trophy-face back">
+            <h4>AI-STHETICA — AIVORA 2026</h4>
+            <p>AIML Dept, SJBIT · 24-hour hackathon</p>
+            <p class="trophy-detail">4th hackathon win, 3rd consecutive. Won it on my father's birthday — walked up to him with the win as his gift.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trophy-card">
+        <div class="trophy-inner">
+          <div class="trophy-face front">
+            <img class="trophy-img-bg" src="../preview-13.webp" alt="">
+            <img class="trophy-img-fg" src="../preview-13.webp" alt="Innovathon Impulse and Beam Build Battle wins">
+            <div class="trophy-badge silver">2nd</div>
+            <div class="trophy-face-label">IMPULSE + BEAM</div>
+          </div>
+          <div class="trophy-face back">
+            <h4>Innovathon IMPULSE · Beam Build Battle</h4>
+            <p>SJBIT ECE × IEEE  ·  BNMIT × IEEE Synergy</p>
+            <p class="trophy-detail">2nd place with Team Reckoners under judge pressure, then 1st place with Team IntelNtag — designed, assembled, and coded a working IR laser-tag system from scratch in 12 hours.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trophy-card">
+        <div class="trophy-inner">
+          <div class="trophy-face front">
+            <img class="trophy-img-bg" src="../WhatsApp Image 2026-07-30 at 19.51.45 (2).webp" alt="">
+            <img class="trophy-img-fg" src="../WhatsApp Image 2026-07-30 at 19.51.45 (2).webp" alt="Best Research Paper Award">
+            <div class="trophy-badge gold">BEST PAPER</div>
+            <div class="trophy-face-label">ICRIET-2025</div>
+          </div>
+          <div class="trophy-face back">
+            <h4>Best Research Paper — ICRIET-2025</h4>
+            <p>KS Institute of Technology, Bengaluru</p>
+            <p class="trophy-detail">"3D-Printed Medical Aids for Hemorrhage Control in Battlefield Conditions" — published in IJCRT, Vol. 13.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="trophy-card">
+        <div class="trophy-inner">
+          <div class="trophy-face front">
+            <img class="trophy-img-bg" src="../preview-9.webp" alt="">
+            <img class="trophy-img-fg" src="../preview-9.webp" alt="Three star win streak">
+            <div class="trophy-badge streak">STREAK</div>
+            <div class="trophy-face-label">3★ IN A ROW</div>
+          </div>
+          <div class="trophy-face back">
+            <h4>The Streak</h4>
+            <p>ADVAYA → Innovathon IMPULSE → Beam Build Battle</p>
+            <p class="trophy-detail">Three competitions, three different teams, three podiums — inside the same short stretch of the calendar.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ CERTIFICATIONS ============ -->
+<section class="section certifications section-animate" id="certifications">
+  <div class="section-frame">
+    <p class="section-kicker">// EVIDENCE LOCKER</p>
+    <h2 class="section-title">Certifications</h2>
+    <p class="section-lede">Self-paced, proctored, and verifiable — the skills stack behind the projects above.</p>
+
+    <div class="cert-grid">
+      <div class="cert-card">
+        <img src="../certs/python_basic_certificate.webp" alt="HackerRank Python (Basic) certificate">
+        <div class="cert-copy">
+          <h4>Python (Basic)</h4>
+          <p>HackerRank</p>
+        </div>
+      </div>
+      <div class="cert-card">
+        <img src="../certs/sql_basic_certificate.webp" alt="HackerRank SQL (Basic) certificate">
+        <div class="cert-copy">
+          <h4>SQL (Basic)</h4>
+          <p>HackerRank</p>
+        </div>
+      </div>
+      <div class="cert-card">
+        <img src="../certs/java_basic_certificate.webp" alt="HackerRank Java (Basic) certificate">
+        <div class="cert-copy">
+          <h4>Java (Basic)</h4>
+          <p>HackerRank</p>
+        </div>
+      </div>
+      <div class="cert-card">
+        <img src="../certs/problem_solving_basic_certificate.webp" alt="HackerRank Problem Solving (Basic) certificate">
+        <div class="cert-copy">
+          <h4>Problem Solving (Basic)</h4>
+          <p>HackerRank</p>
+        </div>
+      </div>
+      <div class="cert-card">
+        <img src="../certs/Design_and_analysis_of_algorithms.webp" alt="NPTEL Design and Analysis of Algorithms certificate">
+        <div class="cert-copy">
+          <h4>Design &amp; Analysis of Algorithms</h4>
+          <p>NPTEL · IIT Madras — 8-week course</p>
+        </div>
+      </div>
+      <div class="cert-card">
+        <img src="../certs/Ethical_Hacking.webp" alt="NPTEL Ethical Hacking certificate, Elite">
+        <div class="cert-copy">
+          <h4>Ethical Hacking <span class="cert-badge">Elite</span></h4>
+          <p>NPTEL · IIT Kharagpur — 12-week course</p>
+        </div>
+      </div>
+      <div class="cert-card">
+        <img src="../certs/AI_IN_HRM.webp" alt="NPTEL AI in Human Resource Management certificate, Elite">
+        <div class="cert-copy">
+          <h4>AI in Human Resource Management <span class="cert-badge">Elite</span></h4>
+          <p>NPTEL · IIT Guwahati — 12-week course</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BUILDER ARC (PROJECTS) ============ -->
+<section class="section builds section-animate" id="builds">
+  <div class="section-frame">
+    <p class="section-kicker">// LEVEL 02 — THE BUILDER ARC</p>
+    <h2 class="section-title">Things I actually shipped</h2>
+    <p class="section-lede">Not slideware. Real, running systems — two of them you can open right now.</p>
+
+    <div class="project-list">
+
+      <article class="project-row live">
+        <div class="project-index">01</div>
+        <div class="project-body">
+          <h3>Project Argus</h3>
+          <img src="../generated/argus-eye.png" alt="Project Argus" class="project-img">
+          <p class="project-tag">Decentralized Agentic AI Surveillance Platform · Final Year Project</p>
+          <p>A multi-node distributed surveillance system with dynamic agent spawning for real-time detection and cross-camera tracking — a FastAPI + WebSocket bridge with NATS messaging holds every node together in real time.</p>
+          <div class="project-actions">
+            <a href="https://argus-47.netlify.app" target="_blank" rel="noopener" class="proj-btn primary">LAUNCH LIVE DEMO ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="project-row live">
+        <div class="project-index">02</div>
+        <div class="project-body">
+          <h3>SAATHI</h3>
+          <img src="../generated/saathi-tree.png" alt="SAATHI" class="project-img">
+          <p class="project-tag">Voice-Based Health Screening for Feature Phones · 2nd Place, Innovathon IMPULSE 2026</p>
+          <p>AI reachable over SMS, phone calls, and WhatsApp, in native Indian languages, for people without smartphones or app access. Pitched to and selected by Sujai's Dental Clinic, Bengaluru, for further development.</p>
+          <div class="project-actions">
+            <a href="https://saathi-presentation.netlify.app/" target="_blank" rel="noopener" class="proj-btn primary">LAUNCH LIVE DEMO ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="project-row">
+        <div class="project-index">03</div>
+        <div class="project-body">
+          <h3>AXIOM</h3>
+          <img src="../generated/axiom-crystal.png" alt="AXIOM" class="project-img">
+          <p class="project-tag">On-Chain Safety Layer for Autonomous AI Agents · 3rd Place, HACK.ALGO 2026</p>
+          <p>Six Algorand smart contracts enforcing spending limits and multi-signature approval for AI agents transacting on their own — with a semantic router and behavioral-drift detector watching for anomalies in real time.</p>
+        </div>
+      </article>
+
+      <article class="project-row">
+        <div class="project-index">04</div>
+        <div class="project-body">
+          <h3>VeriFarm</h3>
+          <img src="../preview-14.webp" alt="VeriFarm" class="project-img">
+          <p class="project-tag">Blockchain-Backed Agricultural Supply Chain Traceability · 1st Place, ADVAYA Hackathon 2.0</p>
+          <p>A transparency system recording and verifying transactions between farmers, distributors, and buyers, with AI-based anomaly detection flagging suspicious activity across the chain.</p>
+        </div>
+      </article>
+
+      <article class="project-row">
+        <div class="project-index">05</div>
+        <div class="project-body">
+          <h3>Agronym Solutions</h3>
+          <img src="../WhatsApp Image 2026-07-30 at 19.51.45.webp" alt="Agronym Solutions" class="project-img">
+          <p class="project-tag">Autonomous Agricultural Rover · 2nd Place, InnovateX 2024 (70+ teams)</p>
+          <p>Built for farmers like my own father — computer-vision-driven weed detection, soil testing, and precision irrigation, with retrofittable smart valves that install onto existing farm infrastructure.</p>
+        </div>
+      </article>
+
+      <article class="project-row">
+        <div class="project-index">06</div>
+        <div class="project-body">
+          <h3>AVANGARD</h3>
+          <img src="../generated/digital-solver.png" alt="AVANGARD" class="project-img">
+          <p class="project-tag">AI-Driven Threat Intelligence Engine</p>
+          <p>Aggregates real-time data from VirusTotal and Shodan to automate CVE scanning and cut down manual security-analysis effort, unified into a single live dashboard.</p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESEARCH ============ -->
+<section class="section research section-animate" id="research">
+  <div class="section-frame">
+    <p class="section-kicker">// LEVEL 01 — THE RESEARCH CHAPTER</p>
+    <h2 class="section-title">Published, presented, awarded</h2>
+
+    <div class="research-grid">
+      <div class="research-card">
+        <img src="../WhatsApp Image 2026-07-30 at 19.51.45 (2).webp" alt="Best Research Paper certificate">
+        <div class="research-copy">
+          <h3>3D-Printed Medical Aids for Hemorrhage Control in Battlefield Conditions</h3>
+          <p>Co-authored and presented at <span class="hl-amber">ICRIET-2025</span> (KS Institute of Technology) — won <span class="hl-amber">Best Research Paper Award</span> in its track. Published in IJCRT, Vol. 13, July 2025.</p>
+          <a href="https://www.ijcrt.org/papers/IJCRTBE02004.pdf" target="_blank" rel="noopener" class="proj-btn ghost">READ THE PAPER ↗</a>
+        </div>
+      </div>
+
+      <div class="research-card reverse">
+        <img src="../preview-4.webp" alt="Presenting research on stage">
+        <div class="research-copy">
+          <h3>SkillM — Transformative Reinforcement</h3>
+          <p>"Quantifying the Impact of a Gamified, Offline E-learning Platform in Underserved Contexts" — submitted to <span class="hl-amber">Educational Technology &amp; Society (ET&amp;S)</span>. The platform delivered a <span class="hl-amber">63% academic score improvement</span> across 54 students in underserved communities in one week (p &lt; 0.001).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="research-stat-strip">
+      <div class="rstat"><span class="rstat-num">300+</span><span class="rstat-label">Students in the audience when I presented both papers on stage at SJBIT's Induction Program</span></div>
+      <div class="rstat"><span class="rstat-num">63%</span><span class="rstat-label">Academic score improvement measured in the SkillM study</span></div>
+      <div class="rstat"><span class="rstat-num">p&lt;.001</span><span class="rstat-label">Statistical significance on the SkillM results</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BEYOND CODE ============ -->
+<section class="section beyond section-animate" id="beyond">
+  <div class="section-frame">
+    <p class="section-kicker">// LEVEL 04 — BEYOND CODE</p>
+    <h2 class="section-title">Off the leaderboard</h2>
+
+    <div class="beyond-grid">
+      <div class="beyond-card">
+        <img src="../preview-5-2.jpeg" alt="Faculty Development Program on wildlife awareness">
+        <h4>Faculty Development Program — Wildlife Awareness</h4>
+        <p>A week volunteering as part of the audience in a program on wildlife awareness, public responsibility, and socially driven learning. A reminder that not all learning happens within four walls.</p>
+      </div>
+      <div class="beyond-card">
+        <img src="../preview-11.webp" alt="Presenting to SJBIT induction program">
+        <h4>Mentorship &amp; Outreach</h4>
+        <p>Active member of team CleverFyre and a regular volunteer at tech community events — presenting research to 300+ first-year students and staying involved wherever curiosity needs a nudge.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="section contact section-animate" id="contact">
+  <div class="section-frame contact-frame">
+    <img src="../preview.webp" alt="Eshan H" class="contact-photo">
+    <p class="section-kicker">// LEVEL 05 — NOW</p>
+    <h2 class="section-title">What's next</h2>
+    <p class="contact-lede">Actively looking for internship and entry-level opportunities to build meaningful technology, learn alongside people sharper than me, and keep solving problems — one puzzle at a time.</p>
+
+    <div class="contact-links">
+      <a href="mailto:eshanh051116@gmail.com" class="contact-link">
+        <span class="contact-link-label">EMAIL</span>
+        <span class="contact-link-value">eshanh051116@gmail.com</span>
+      </a>
+      <a href="https://linkedin.com/in/eshan-h" target="_blank" rel="noopener" class="contact-link">
+        <span class="contact-link-label">LINKEDIN</span>
+        <span class="contact-link-value">linkedin.com/in/eshan-h</span>
+      </a>
+      <a href="https://github.com/Falcon0516" target="_blank" rel="noopener" class="contact-link">
+        <span class="contact-link-label">GITHUB</span>
+        <span class="contact-link-value">github.com/Falcon0516</span>
+      </a>
+      <a href="tel:+919380070210" class="contact-link">
+        <span class="contact-link-label">PHONE</span>
+        <span class="contact-link-value">+91 93800 70210</span>
+      </a>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <span>Built by hand. Deployed on curiosity.</span>
+    <span>© 2026 Eshan H</span>
+  </footer>
+</section>
+
+<!-- ============ LEVEL MODAL ============ -->
+<div class="level-modal" id="levelModal">
+  <div class="level-modal-backdrop" id="levelModalBackdrop"></div>
+  <div class="level-modal-card">
+    <button class="level-modal-close" id="levelModalClose">✕</button>
+    <div class="level-modal-body" id="levelModalBody"></div>
+  </div>
+</div>
+
+<!-- ============ AGENT PANEL ============ -->
+<div class="agent-panel" id="agentPanel">
+  <div class="agent-header">
+    <div class="agent-header-left">
+      <span class="agent-avatar">◈</span>
+      <div>
+        <div class="agent-name">ARGUS</div>
+        <div class="agent-status">Guide Agent · online</div>
+      </div>
+    </div>
+    <button class="agent-close" id="agentClose">✕</button>
+  </div>
+  <div class="agent-messages" id="agentMessages">
+    <div class="agent-msg bot">
+      <p>Systems online. I'm ARGUS — named after Eshan's own surveillance platform. I know his projects, his wins, and most of his bad 3am decisions during hackathons. Ask me anything, or just scroll and I'll narrate.</p>
+    </div>
+  </div>
+  <div class="agent-suggestions" id="agentSuggestions">
+    <button data-q="What is Project Argus?">What is Project Argus?</button>
+    <button data-q="What's Eshan's biggest achievement?">Biggest achievement?</button>
+    <button data-q="Is Eshan looking for an internship?">Looking for a role?</button>
+  </div>
+  <form class="agent-input-row" id="agentForm">
+    <input type="text" id="agentInput" placeholder="Ask ARGUS anything about Eshan..." autocomplete="off">
+    <button type="submit" class="agent-send">→</button>
+  </form>
+</div>
+
+<!-- ============ GAMIFICATION LAYER ============ -->
+<div class="kbd-hint" id="kbdHint">
+  Press <kbd>1</kbd>–<kbd>8</kbd> to jump sections · <kbd>?</kbd> for shortcuts
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="xp-hud" id="xpHud">
+  <div class="xp-ring-wrap">
+    <svg width="40" height="40" viewBox="0 0 40 40">
+      <circle class="xp-ring-bg" cx="20" cy="20" r="17"></circle>
+      <circle class="xp-ring-fg" id="xpRingFg" cx="20" cy="20" r="17" stroke-dasharray="106.8" stroke-dashoffset="106.8"></circle>
+    </svg>
+    <div class="xp-ring-label" id="xpPercentLabel">0%</div>
+  </div>
+  <div class="xp-text">
+    <span class="xp-text-top">EXPLORATION</span>
+    <span class="xp-text-bottom" id="xpPointsLabel">0 XP</span>
+  </div>
+</div>
+
+<div class="achieve-panel" id="achievePanel">
+  <div class="achieve-panel-title"><span>ACHIEVEMENTS</span><span id="achieveCount">0/8</span></div>
+  <div class="achieve-list" id="achieveList"></div>
+</div>
+
+<div class="egg-modal" id="eggModal">
+  <div class="egg-backdrop" id="eggBackdrop"></div>
+  <div class="egg-card">
+    <div class="egg-icon">◈</div>
+    <h3>Secret Found: Attention to Detail</h3>
+    <p>You just typed the Konami code on a portfolio website. That's exactly the kind of curiosity that built an aquarium automation system in 9th grade and a surveillance platform in final year. Eshan would probably want to hire you, honestly.</p>
+    <button class="egg-close" id="eggClose">CLOSE</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/three-bg.js"></script>
+<script src="js/main.js"></script>
+<script src="js/agent.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
