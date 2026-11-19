@@ -128,6 +128,8 @@
     $('#b-r').onclick = function () { var r = $('#reality'); if (!r.hidden && r.dataset.manual) closeReality(); else if (!(mode === 'present' && cur === 7)) openReality(true); };
     $('#rc-close').onclick = function () { closeReality(); };
     $('#b-t').onclick = function () { $('#notes-p').hidden = !$('#notes-p').hidden; }; $('#b-m').onclick = toggleSound; $('#b-f').onclick = fs;
+    var initSnd = PF.snd.sync(); $('#b-m').setAttribute('aria-pressed', initSnd); $('#b-m').classList.toggle('on', initSnd);
+    window.addEventListener('pageshow', function () { var on = PF.snd.sync(); $('#b-m').setAttribute('aria-pressed', on); $('#b-m').classList.toggle('on', on); });
     // click right 30% to advance; never when clicking an interactive object
     $('#app').addEventListener('click', function (e) {
       if (mode !== 'present' || e.target.closest('.int,button,a,input,label,#reality,#notes-p,[data-tip],#chrome,#dots')) return;

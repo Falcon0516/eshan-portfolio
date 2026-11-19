@@ -125,12 +125,18 @@ body.docked #labels{display:none}
 
 body.explore #labels{display:flex}
 @media (max-width:760px){
-  #copy{width:100%;padding:16px 16px 70px;background:linear-gradient(0deg,rgba(26,15,10,.96) 75%,rgba(26,15,10,0))}
-  #head{font-size:46px}#cap{font-size:22px}
-  #rovy{width:110px;height:110px}
-  #toggles .obj{padding:0 8px;font-size:13px}#realbtn,#notebtn{display:none}
-  #reality{flex-direction:column;overflow:auto;top:60px}
-  #rack{top:62px;left:6px;width:300px}.dial{width:62px}.dial svg{width:62px;height:62px}
+  #chrome-top{padding:6px 8px}
+  .obj{min-height:36px;height:36px;min-width:34px;padding:0 8px;font-size:11px}
+  #toggles{gap:4px}
+  #simbadge{top:auto;left:10px;bottom:48px;transform:none;font-size:10px;padding:3px 7px}
+  #hint{display:none}
+  #clock{top:96px;right:10px;font-size:11px}
+  #copy{width:100%;padding:14px 14px 66px;background:linear-gradient(0deg,rgba(26,15,10,.96) 75%,rgba(26,15,10,0))}
+  #head{font-size:38px}#cap{font-size:18px}#take{font-size:14px}
+  #rovy{width:96px;height:96px}
+  #toggles .obj{padding:0 7px;font-size:11px}#realbtn,#notebtn{display:none}
+  #reality{flex-direction:column;overflow:auto;top:98px}
+  #rack{top:98px;left:6px;width:300px}.dial{width:62px}.dial svg{width:62px;height:62px}
 }
 @media (prefers-reduced-motion:reduce){
   #world{transition:opacity 300ms}

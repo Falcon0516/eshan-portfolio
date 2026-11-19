@@ -63,5 +63,5 @@ body.explore #ctl{display:flex}body.explore #hud,body.explore #terms,body.explor
 #entry.go{display:block;animation:warm .7s steps(7) forwards}
 @keyframes warm{0%{opacity:1}30%{opacity:.4}45%{opacity:.9}70%{opacity:.2}100%{opacity:0}}
 body.pres-hide #top,body.pres-hide #dots{opacity:0}
-@media(max-width:700px){#hud{width:100vw;padding-bottom:9vh}#head{font-size:15vw}#cap{font-size:20px}#mas,#reg{display:none}#rc{grid-template-columns:1fr;overflow:auto;inset:8vh 3vw 8vh}#terms{display:none}#badge{top:66px;font-size:12px}}
+@media(max-width:700px){#back{left:8px;top:6px;min-height:36px;height:36px;padding:0 8px;font-size:11px}#top{right:8px;top:6px;gap:4px}#top button{min-height:36px;height:36px;min-width:34px;padding:0 7px;font-size:11px}#hud{width:100vw;padding:12px 14px 52px}#head{font-size:12vw}#cap{font-size:17px}#take{font-size:13px}#mas,#reg,#terms,#hint{display:none}#rc{grid-template-columns:1fr;overflow:auto;inset:96px 10px 44px}#dots{bottom:12px;right:10px}#badge{top:auto;left:8px;bottom:8px;font-size:10px;padding:4px 8px}}
 @media(prefers-reduced-motion:reduce){#grain,#mas img{animation:none}#rc.on{animation:none}.stamp.on{animation:none;transform:rotate(-7deg);opacity:1}}

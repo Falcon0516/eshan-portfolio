@@ -3,6 +3,18 @@
   var F = window.FACTS, $ = function (s) { return document.querySelector(s); };
   var track = $('#track'), plate = $('#plate'), cv = $('#fx'), cx = cv.getContext('2d'), W = 0, H = 0;
   var cur = 0, mode = 'present', sound = false, ac = null, sparks = new Flow.Sparks(120), insts = [], moving = 0, lastMove = 0;
+  try { sound = localStorage.getItem('arc_snd') === '1'; } catch (e) {}
+  function saveSnd(on) { try { localStorage.setItem('arc_snd', on ? '1' : '0'); } catch (e) {} }
+  function ensureAc() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    if (ac && ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+  }
+  if (sound) {
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, function () { if (sound) ensureAc(); }, { capture: true, once: true, passive: true });
+    });
+  }
+  window.addEventListener('pageshow', function () { try { sound = localStorage.getItem('arc_snd') === '1'; } catch (e) {} });
   var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* tooltips: wrap known terms */
@@ -11,7 +23,9 @@
   function T(s) { return String(s).replace(tipRe, function (m) { return '<span class="term" tabindex="0" data-tip="' + F.tips[m].replace(/"/g, '&quot;') + '">' + m + '</span>'; }); }
 
   function tone(f, d, type, v) {
-    if (!sound || !ac) return;
+    if (!sound) return;
+    if (!ac) ensureAc();
+    if (!ac) return;
     var o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.value = f; g.gain.value = v;
     g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
   }
@@ -88,8 +102,8 @@
   }
   $('#mode').onclick = function () { setMode(mode === 'present' ? 'explore' : 'present'); };
 
-  /* sound toggle: AudioContext only after a gesture */
-  function toggleSound() { sound = !sound; if (sound && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { sound = false; } } if (sound && ac && ac.state === 'suspended') ac.resume(); if (sound) snd.blip(); }
+  /* sound toggle synced with global arc_snd; AudioContext starts on gesture */
+  function toggleSound() { sound = !sound; saveSnd(sound); if (sound) { ensureAc(); snd.blip(); } window.dispatchEvent(new CustomEvent('arcade:sound-sync', { detail: { on: sound } })); }
 
   /* keys */
   document.addEventListener('keydown', function (e) {

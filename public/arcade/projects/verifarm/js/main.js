@@ -323,6 +323,8 @@
 
   /* ---------- boot ---------- */
   window.VFBoot = function () {
+    if (window.VFAudio) $('#mbtn').classList.toggle('on', VFAudio.sync());
+    window.addEventListener('pageshow', function () { if (window.VFAudio) $('#mbtn').classList.toggle('on', VFAudio.sync()); });
     buildStage(); buildDots(); VFx.chain.render(); VFx.showFlagLabels(false);
     var hub = /[?&]from=hub\b/.test(location.search); if (hub) { $('#entry').classList.add('on'); setTimeout(function () { $('#entry').classList.remove('on'); }, 800); }
     var m = /^#scene-(\d+)$/.exec(location.hash), start = m ? +m[1] - 1 : 0;

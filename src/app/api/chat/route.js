@@ -50,10 +50,60 @@ const GAME_WORLD_NOTE = `
 Eshan's portfolio root (/) is a 2D side-scrolling platformer built with Next.js, React, and Three.js with ${ZONES.length} zones: ${ZONES.map((z) => z.name).join(', ')}. Players walk with arrow keys or A/D, jump with Space/W/Up, hit ? blocks from below, enter portals (including Project Arcade at /arcade/), complete mini-games (quiz, circuit splice, rhythm tap, memory lattice, terminal breach), and can preview or download the resume from the top bar.
 `.trim();
 
+const ALLOWED_SLUGS = new Set(Object.keys(PROJECT_CONTEXT));
+const ALLOWED_SECTIONS = new Set(['#top', '#about', '#skills', '#work', '#awards', '#research', '#certs', '#gallery', '#contact']);
+const ALLOWED_MODALS = new Set(['resume', 'explain']);
+const ALLOWED_EXT_EXACT = new Set([
+  'https://github.com/Falcon0516',
+  'https://www.linkedin.com/in/eshan-h',
+  'https://linkedin.com/in/eshan-h',
+  'https://argus-47.netlify.app',
+  'https://saathi-presentation.netlify.app',
+  'https://persona--forge.vercel.app',
+  'https://vigyantra.vercel.app',
+  'https://verifarm-2026.web.app',
+  'https://play.google.com/store/apps/details?id=com.verifarm.app',
+  'https://www.ijcrt.org/papers/IJCRTBE02004.pdf',
+  'mailto:eshanh051116@gmail.com',
+]);
+
+function isAllowedAction(type, target) {
+  const t = String(type || '').trim().toUpperCase();
+  const v = String(target || '').trim();
+  if (t === 'SECTION') return ALLOWED_SECTIONS.has(v);
+  if (t === 'MODAL') return ALLOWED_MODALS.has(v);
+  if (t === 'ARCADE') {
+    if (v === '/' || v === '/Eshan_Portfolio/index.html' || v === '/arcade/index.html') return true;
+    const m = /^\/arcade\/projects\/([a-z0-9-]+)\/index\.html$/.exec(v);
+    return !!(m && ALLOWED_SLUGS.has(m[1]));
+  }
+  if (t === 'EXT') {
+    if (ALLOWED_EXT_EXACT.has(v)) return true;
+    return v.startsWith('https://github.com/Falcon0516/');
+  }
+  return false;
+}
+
+const FORMAT_AND_ACTIONS_GUIDE = `
+RESPONSE FORMATTING & NAVIGATION ACTIONS:
+- Format answers clearly for quick scanning: use concise bullet lists ("- **Label:** detail") when listing 2+ facts or specs.
+- When explaining a multi-step system architecture, pipeline, or data flow, include a compact fenced flow diagram:
+\`\`\`flow
+Step A -> Step B -> Step C
+\`\`\`
+- Keep answers direct and accurate under ~150 words unless asked for deep technical detail. No em dashes.
+- When helpful, end with 1 to 3 clickable navigation chips using ONLY this exact syntax and ONLY these allowlisted targets:
+  - Sections: [[ACTION:SECTION|Section Label|#about|#skills|#work|#awards|#research|#certs|#gallery|#contact]]
+  - Modals: [[ACTION:MODAL|View Resume|resume]] or [[ACTION:MODAL|Open Explain Card|explain]]
+  - Showcase routes: [[ACTION:ARCADE|Open Project Arcade|/arcade/index.html]] or [[ACTION:ARCADE|Open ARGUS Showcase|/arcade/projects/argus/index.html]] (known slugs: ${Array.from(ALLOWED_SLUGS).join(', ')})
+  - External links: [[ACTION:EXT|GitHub|https://github.com/Falcon0516]] or [[ACTION:EXT|LinkedIn|https://linkedin.com/in/eshan-h]] or [[ACTION:EXT|Live Demo|https://argus-47.netlify.app]] or [[ACTION:EXT|SAATHI Demo|https://saathi-presentation.netlify.app]] or [[ACTION:EXT|PersonaForge|https://persona--forge.vercel.app]] or [[ACTION:EXT|Vigyantra|https://vigyantra.vercel.app]] or [[ACTION:EXT|Email Eshan|mailto:eshanh051116@gmail.com]]
+- Never invent or emit any URL outside Eshan's public links in the knowledge base.
+`.trim();
+
 function buildBaseSystemPrompt() {
   const promptHeader = ARGUS_PROMPT_DATA.systemPrompt || '';
   const kb = ARGUS_PROMPT_DATA.knowledgeBase || '';
-  return `${promptHeader}\n\nKNOWLEDGE BASE:\n${kb}\n\n${GAME_WORLD_NOTE}`;
+  return `${promptHeader}\n\n${FORMAT_AND_ACTIONS_GUIDE}\n\nKNOWLEDGE BASE:\n${kb}\n\n${GAME_WORLD_NOTE}`;
 }
 
 const MAIN_SYSTEM_PROMPT = buildBaseSystemPrompt();
@@ -68,6 +118,8 @@ function buildProjectSystemPrompt(slug, proj) {
     .join('\n\n');
 
   return `${ARGUS_PROMPT_DATA.systemPrompt}
+
+${FORMAT_AND_ACTIONS_GUIDE}
 
 PERSONA:
 - You are speaking as ${proj.character.name}, the mascot guide for "${proj.title}".
@@ -91,10 +143,20 @@ ${ARGUS_PROMPT_DATA.knowledgeBase}`;
 }
 
 function sanitizeReply(text) {
-  return String(text || '')
+  let clean = String(text || '')
     .replace(/(?:\+?91[\s-]?)?93800[\s-]?70210/g, '[see the portfolio Contact section]')
     .replace(/gsk_[A-Za-z0-9_-]+/g, '[redacted]')
     .replace(/\u2014/g, ', ');
+
+  let keptActions = 0;
+  clean = clean.replace(/\[\[ACTION:([A-Za-z]+)\|([^|\]]+)\|([^\]]+)\]\]/g, (_, type, label, target) => {
+    const cleanLabel = String(label || '').trim().slice(0, 40);
+    const cleanTarget = String(target || '').trim();
+    if (!cleanLabel || !isAllowedAction(type, cleanTarget) || keptActions >= 3) return '';
+    keptActions += 1;
+    return `[[ACTION:${String(type).toUpperCase()}|${cleanLabel}|${cleanTarget}]]`;
+  });
+  return clean.trim();
 }
 
 function sanitizeHistory(rawHistory) {
@@ -190,7 +252,7 @@ export async function POST(req) {
           ],
           model: 'llama-3.1-8b-instant',
           temperature: 0.4,
-          max_tokens: 320,
+          max_tokens: 460,
         },
         { signal: controller.signal }
       );
@@ -246,7 +308,7 @@ export async function POST(req) {
         ],
         model: 'llama-3.1-8b-instant',
         temperature: 0.45,
-        max_tokens: 320,
+        max_tokens: 460,
       },
       { signal: controller.signal }
     );

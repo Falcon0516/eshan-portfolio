@@ -6,6 +6,10 @@
   function T(m) {
     var s, cx, cy;
     if (m === 'room') { s = Math.min(vw * 0.56 / 2400, vh * 0.62 / 1600); cx = vw * 0.5 - 245 * s; cy = vh * 0.47; }
+    else if (m === 'boot') {
+      s = vw < vh ? Math.min(vw / 1442, vh / 1090) * 0.96 : Math.max(vw / 1442, vh / 1090) * 1.04;
+      cx = vw / 2; cy = vh / 2; A.view.s = s; A.view.visW = vw / s; A.view.visH = vh / s;
+    }
     else { s = Math.max(vw / 1442, vh / 1090) * 1.06; cx = vw / 2; cy = vh / 2; A.view.s = s; A.view.visW = vw / s; A.view.visH = vh / s; }
     return 'translate(' + (cx - s * 955).toFixed(2) + 'px,' + (cy - s * 799).toFixed(2) + 'px) scale(' + s.toFixed(4) + ')';
   }
@@ -20,7 +24,12 @@
       for (var i = 0; i < 46; i++) motes.push({ x: 0.45 + Math.random() * 0.5, y: 0.15 + Math.random() * 0.7, r: 1 + Math.random() * 2.2, p: Math.random() * 6.28, v: 0.003 + Math.random() * 0.01 });
       A.room.fit(S.state === 'WORLD' ? 'world' : 'room', true);
       window.addEventListener('mousemove', function (e) { mx = e.clientX / vw; my = e.clientY / vh; }, { passive: true });
-      window.addEventListener('resize', function () { size(); A.room.fit(mode, true); });
+      window.addEventListener('resize', function () {
+        size();
+        var st = S.state;
+        if (st === 'TV_ON' || st === 'BOOT' || st === 'PRESS_START') A.room.fit('boot', true);
+        else A.room.fit(mode, true);
+      });
       document.getElementById('knob').addEventListener('click', function () { A.engine.powerOn(); });
     },
     fit: function (m, now) {
@@ -42,7 +51,7 @@
       document.body.classList.remove('room-mode'); document.body.classList.add('boot-mode');
       A.audio.play('thunk'); A.audio.play('on');
       screen.classList.add('poweron'); A.fx.static(1500, 0.85);
-      later(function () { A.room.fit('world', rm); }, rm ? 0 : 160);
+      later(function () { A.room.fit('boot', rm); }, rm ? 0 : 160);
       later(function () { document.body.classList.add('inworld'); screen.classList.remove('poweron'); if (!rm) { screen.classList.add('degauss'); } A.room.runBoot(); }, rm ? 200 : 1800);
     },
     runBoot: function () {

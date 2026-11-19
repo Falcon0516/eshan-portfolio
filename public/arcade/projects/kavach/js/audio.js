@@ -1,7 +1,15 @@
 /* Synthesised Web Audio only. Muted by default. Gentle heartbeat, comic pow, soft chime. Never sirens or screams. */
 (function () {
   var A = K.audio = { on: false, ctx: null, beat: 0 };
-  A.init = function () { if (!A.ctx) { var C = window.AudioContext || window.webkitAudioContext; if (C) A.ctx = new C(); } if (A.ctx && A.ctx.state === 'suspended') A.ctx.resume(); return !!A.ctx; };
+  try { A.on = localStorage.getItem('arc_snd') === '1'; } catch (e) {}
+  function save(v) { try { localStorage.setItem('arc_snd', v ? '1' : '0'); } catch (e) {} }
+  A.init = function () { if (!A.ctx) { var C = window.AudioContext || window.webkitAudioContext; if (C) A.ctx = new C(); } if (A.ctx && A.ctx.state === 'suspended') { try { A.ctx.resume(); } catch (e) {} } return !!A.ctx; };
+  function startAmbient() { if (!A.on || !A.init()) return; A.heart(); if (!A.beat) A.beat = setInterval(A.heart, 1300); }
+  if (A.on) {
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, startAmbient, { capture: true, once: true, passive: true });
+    });
+  }
   function tone(f0, f1, dur, vol, type, delay) {
     var c = A.ctx, t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
     o.type = type || 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
@@ -18,8 +26,8 @@
   A.chime = function () { if (!A.on || !A.ctx) return; tone(880, 880, 0.35, 0.08); tone(1320, 1320, 0.45, 0.06, 'sine', 0.09); };
   A.tick = function () { if (!A.on || !A.ctx) return; tone(500, 420, 0.05, 0.05, 'square'); };
   A.toggle = function () {
-    if (!A.on) { if (!A.init()) return false; A.on = true; A.heart(); A.beat = setInterval(A.heart, 1300); }
-    else { A.on = false; clearInterval(A.beat); }
+    if (!A.on) { A.on = true; save(true); startAmbient(); }
+    else { A.on = false; save(false); clearInterval(A.beat); A.beat = 0; }
     return A.on;
   };
   document.addEventListener('visibilitychange', function () { if (document.hidden && A.ctx && A.ctx.state === 'running') A.ctx.suspend(); else if (!document.hidden && A.on && A.ctx) A.ctx.resume(); });

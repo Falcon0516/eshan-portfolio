@@ -78,13 +78,32 @@
     var h = $('hint'); h.textContent = F.hint; h.classList.add('on'); setTimeout(function () { h.classList.remove('on'); }, 6000);
   };
 
-  /* ---- synthesised sound (muted by default; context created only after a gesture) ---- */
+  /* ---- synthesised sound synced across Arcade via arc_snd ---- */
   var ac = null, muted = true;
+  try { muted = localStorage.getItem('arc_snd') !== '1'; } catch (e) {}
+  function saveSnd(on) { try { localStorage.setItem('arc_snd', on ? '1' : '0'); } catch (e) {} }
+  function ensureAc() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    if (ac && ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+  }
+  function syncSoundBtn() {
+    var b = $('mSound');
+    if (b) { b.setAttribute('aria-pressed', muted ? 'false' : 'true'); b.classList.toggle('on', !muted); }
+  }
+  if (!muted) {
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, function () { if (!muted) ensureAc(); }, { capture: true, once: true, passive: true });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', syncSoundBtn);
+  window.addEventListener('pageshow', function () {
+    try { muted = localStorage.getItem('arc_snd') !== '1'; } catch (e) {}
+    syncSoundBtn();
+  });
   UI.sound = { toggle: function () {
-    muted = !muted;
-    if (!muted && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
-    if (ac && ac.state === 'suspended') ac.resume();
-    $('mSound').setAttribute('aria-pressed', muted ? 'false' : 'true'); $('mSound').classList.toggle('on', !muted);
+    muted = !muted; saveSnd(!muted);
+    if (!muted) ensureAc();
+    syncSoundBtn();
     if (!muted) UI.sfx('blip'); return !muted;
   } };
   function tone(f, d, type, vol, slide) {

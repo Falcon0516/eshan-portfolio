@@ -28,6 +28,7 @@
       <li><a href="#skills" data-nav="skills">Skills</a></li>
       <li><a href="#work" data-nav="work">Work</a></li>
       <li><a href="/arcade/index.html?from=pro" class="nav-link-arcade">Project Arcade</a></li>
+      <li><a href="/" class="nav-link-game">Game</a></li>
       <li><a href="#awards" data-nav="awards">Awards</a></li>
       <li><a href="#research" data-nav="research">Research</a></li>
       <li><a href="#gallery" data-nav="gallery">Gallery</a></li>
@@ -47,6 +48,7 @@
   <a href="#skills">Skills</a>
   <a href="#work">Work</a>
   <a href="/arcade/index.html?from=pro" class="nav-link-arcade">Project Arcade &#8599;</a>
+  <a href="/">Playable Game Mode &#8599;</a>
   <button type="button" class="nav-mobile-btn" id="navMobileResume">Resume (Preview &amp; PDF)</button>
   <a href="#awards">Awards</a>
   <a href="#research">Research</a>
@@ -1276,6 +1278,8 @@
   <div class="wrap footer-inner">
     <span>© 2026 Eshan H. Built by hand, in Bengaluru.</span>
     <div class="footer-links">
+      <a href="/">Game Mode</a>
+      <a href="/arcade/index.html?from=pro">Project Arcade</a>
       <a href="#top">Back to top</a>
     </div>
   </div>
@@ -1298,6 +1302,7 @@
       <div class="resume-bar-actions">
         <a href="/resume/Eshan_H_Resume.pdf" download="Eshan_H_Resume.pdf" class="btn-dl">Download PDF</a>
         <a href="/resume/Eshan_H_Resume.pdf" target="_blank" rel="noopener noreferrer" class="btn-open">Open PDF &#8599;</a>
+        <button type="button" class="btn-expand-res" id="resumeModalExpand" aria-label="Expand resume fullscreen">Full View</button>
         <button type="button" class="resume-close" id="resumeModalClose" aria-label="Close resume preview">✕</button>
       </div>
     </div>
@@ -1307,6 +1312,10 @@
 
 
 <!-- ARGUS AI ASSISTANT -->
+<div class="agent-intro-tip" id="agentIntroTip" role="status">
+  <span>Ask ARGUS for project flows, IP specs &amp; quick section jumps.</span>
+  <button type="button" aria-label="Dismiss tip">&times;</button>
+</div>
 <button class="agent-toggle" id="agentToggle" aria-label="Open ARGUS assistant">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" fill="white"/>
@@ -1328,9 +1337,13 @@
         <span class="agent-status">AI Assistant</span>
       </div>
     </div>
-    <button class="agent-close" id="agentClose" aria-label="Close">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
+    <div class="agent-head-acts">
+      <button type="button" class="agent-head-btn" id="agentClear" aria-label="Clear conversation">Clear</button>
+      <button type="button" class="agent-head-btn" id="agentExpand" aria-label="Expand chat window">&#x2922;</button>
+      <button class="agent-close" id="agentClose" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="agent-messages" id="agentMessages">
@@ -1361,9 +1374,19 @@
   var modal = document.getElementById('resumeModal');
   var pages = document.getElementById('resumeModalPages');
   var closeBtn = document.getElementById('resumeModalClose');
+  var expandBtn = document.getElementById('resumeModalExpand');
+  var sheetEl = modal ? modal.querySelector('.resume-sheet') : null;
   var navToggle = document.getElementById('navToggle');
   var navMobile = document.getElementById('navMobile');
   var lastFocus = null;
+
+  if (expandBtn && sheetEl && modal) {
+    expandBtn.addEventListener('click', function () {
+      var on = sheetEl.classList.toggle('expanded');
+      modal.classList.toggle('is-exp', on);
+      expandBtn.textContent = on ? 'Compact' : 'Full View';
+    });
+  }
 
   function openResumeModal() {
     if (!modal || !pages) return;

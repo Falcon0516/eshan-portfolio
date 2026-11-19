@@ -36,9 +36,17 @@ var runT=[];function run(a){runT.forEach(clearTimeout);runT=[];$("res").textCont
   if(k===10||bad){var r=a.burst&&blocked?"Burst limit stopped it.":a.r;$("res").innerHTML=(bad?"BLOCKED at gate "+(k+1):"PASSED")+"<small>"+r+"</small>"}},k*320))})(k)}
 // mode
 function setMode(m){mode=m;$("explore").classList.toggle("on",m==="explore");$("bP").textContent=m==="explore"?"P PRESENT":"P EXPLORE";$("copy").style.display=$("bouncer").style.display=m==="explore"?"none":""}
-// audio
-var ac,muted=true;function beep(f){if(muted||!ac)return;var o=ac.createOscillator(),v=ac.createGain();o.frequency.value=f;v.gain.value=.05;o.connect(v);v.connect(ac.destination);o.start();o.stop(ac.currentTime+.12)}
-function snd(){muted=!muted;if(!muted&&!ac)ac=new(window.AudioContext||window.webkitAudioContext)();$("bM").textContent=muted?"M":"M ON";beep(F.scenes[cur].ok?660:120)}
+// audio synced globally via arc_snd
+var ac,muted=true;
+try{muted=localStorage.getItem("arc_snd")!=="1"}catch(e){}
+function saveSnd(on){try{localStorage.setItem("arc_snd",on?"1":"0")}catch(e){}}
+function ensureAc(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){ac=null}}if(ac&&ac.state==="suspended"){try{ac.resume()}catch(e){}}}
+function syncM(){if($("bM"))$("bM").textContent=muted?"M":"M ON"}
+syncM();
+if(!muted){["pointerdown","keydown"].forEach(function(ev){document.addEventListener(ev,function(){if(!muted)ensureAc()},{capture:true,once:true,passive:true})})}
+window.addEventListener("pageshow",function(){try{muted=localStorage.getItem("arc_snd")!=="1"}catch(e){}syncM()});
+function beep(f){if(muted)return;ensureAc();if(!ac)return;var o=ac.createOscillator(),v=ac.createGain();o.frequency.value=f;v.gain.value=.05;o.connect(v);v.connect(ac.destination);o.start();o.stop(ac.currentTime+.12)}
+function snd(){muted=!muted;saveSnd(!muted);if(!muted)ensureAc();syncM();beep(F.scenes[cur].ok?660:120)}
 function full(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
 function next(){go(cur+1)}function prev(){go(cur-1)}
 document.addEventListener("keydown",function(e){var k=e.key;

@@ -117,6 +117,9 @@
     else if (k === 'Escape') { if (!closeOverlays()) { if (mode === 'explore') setMode('present'); else location.href = BACK; } }
   });
   $('modebtn').onclick = function () { setMode(mode === 'present' ? 'explore' : 'present'); };
+  function syncSoundBtn() { var on = window.Sound.sync(); $('soundbtn').textContent = on ? 'SND ON' : 'SND OFF'; }
+  syncSoundBtn();
+  window.addEventListener('pageshow', syncSoundBtn);
   $('soundbtn').onclick = function () { this.textContent = window.Sound.toggle() ? 'SND ON' : 'SND OFF'; };
   $('notebtn').onclick = function () { UI.notes(null, true); };
   $('realbtn').onclick = function () { if (UI.realityOpen() && !(Sc[idx].dock && mode === 'present')) UI.reality(false); else UI.reality(true, Sc[idx].dock && mode === 'present'); };

@@ -8,6 +8,7 @@
     if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
     return ctx;
   }
+  function isUserActive() { try { return navigator.userActivation ? navigator.userActivation.hasBeenActive : false; } catch (e) { return false; } }
   function tone(f, d, type, vol, slide, when) {
     var t = ctx.currentTime + (when || 0), o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type || 'square'; o.frequency.setValueAtTime(f, t);
@@ -30,7 +31,8 @@
   }
   A.audio = {
     isMuted: function () { return muted; },
-    setMuted: function (m) { muted = m; if (!m) { ensure(); } loop(!m && A.S && A.S.state === 'WORLD'); if (A.ui) A.ui.syncSound(); },
+    unlock: function () { if (!muted) { ensure(); if (A.S && A.S.state === 'WORLD' && !loopId) loop(true); } },
+    setMuted: function (m) { muted = m; if (!m && (isUserActive() || ctx)) { ensure(); } loop(!m && A.S && A.S.state === 'WORLD'); if (A.ui) A.ui.syncSound(); },
     loop: loop,
     play: function (n) {
       if (muted || !ensure()) return;

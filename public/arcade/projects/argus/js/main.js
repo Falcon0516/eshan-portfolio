@@ -62,13 +62,29 @@
   addEventListener('hashchange', function () { var m = /scene-(\d)/.exec(location.hash); if (m && +m[1] - 1 !== cur) go(+m[1] - 1); });
   addEventListener('resize', resize);
 
-  /* ---- sound (muted by default, synthesised) ---- */
+  /* ---- sound synced globally via arc_snd ---- */
   var ac = null, muted = true, rainG = null;
-  function toggleSound() { muted = !muted; $('#mBtn').setAttribute('aria-pressed', !muted); $('#mBtn').style.color = muted ? '' : '#FFB020';
-    if (!muted && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); var n = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = n.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-      var s = ac.createBufferSource(); s.buffer = n; s.loop = true; var f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400; rainG = ac.createGain(); rainG.gain.value = 0.05; s.connect(f); f.connect(rainG); rainG.connect(ac.destination); s.start(); } catch (e) { ac = null; } }
-    if (rainG) rainG.gain.value = muted ? 0 : 0.05; }
-  A.snd = function (kind) { if (muted || !ac) return; var o = ac.createOscillator(), v = ac.createGain(), t = ac.currentTime; o.connect(v); v.connect(ac.destination);
+  try { muted = localStorage.getItem('arc_snd') !== '1'; } catch (e) {}
+  function saveSnd(on) { try { localStorage.setItem('arc_snd', on ? '1' : '0'); } catch (e) {} }
+  function syncSoundBtn() {
+    $('#mBtn').setAttribute('aria-pressed', !muted);
+    $('#mBtn').style.color = muted ? '' : '#FFB020';
+  }
+  function ensureAc() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); var n = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = n.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      var s = ac.createBufferSource(); s.buffer = n; s.loop = true; var f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400; rainG = ac.createGain(); rainG.gain.value = muted ? 0 : 0.05; s.connect(f); f.connect(rainG); rainG.connect(ac.destination); s.start(); } catch (e) { ac = null; } }
+    if (ac && ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    if (rainG) rainG.gain.value = muted ? 0 : 0.05;
+  }
+  syncSoundBtn();
+  if (!muted) {
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, function () { if (!muted) ensureAc(); }, { capture: true, once: true, passive: true });
+    });
+  }
+  window.addEventListener('pageshow', function () { try { muted = localStorage.getItem('arc_snd') !== '1'; } catch (e) {} syncSoundBtn(); if (rainG) rainG.gain.value = muted ? 0 : 0.05; });
+  function toggleSound() { muted = !muted; saveSnd(!muted); syncSoundBtn(); if (!muted) ensureAc(); else if (rainG) rainG.gain.value = 0; }
+  A.snd = function (kind) { if (muted) return; if (!ac) ensureAc(); if (!ac) return; var o = ac.createOscillator(), v = ac.createGain(), t = ac.currentTime; o.connect(v); v.connect(ac.destination);
     if (kind === 'thump') { o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(40, t + .25); v.gain.setValueAtTime(.4, t); v.gain.exponentialRampToValueAtTime(.001, t + .3); o.start(t); o.stop(t + .32); }
     else { o.type = 'square'; o.frequency.value = 1800; v.gain.setValueAtTime(.05, t); v.gain.exponentialRampToValueAtTime(.001, t + .04); o.start(t); o.stop(t + .05); } };
 

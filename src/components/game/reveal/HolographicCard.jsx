@@ -29,15 +29,18 @@ export default function HolographicCard({ content, contentKey, accent, onClose, 
   const rarity = deriveRarity(content || {});
   const isTouch = typeof window !== "undefined" && "ontouchstart" in window;
   const tilt = useCardTilt();
+  const cardId = contentKey || content?.title || "__card";
+  const [expandedCardId, setExpandedCardId] = React.useState(null);
+  const expanded = expandedCardId === cardId;
 
   return (
     <motion.div
-      className="holo-card"
+      className={`holo-card${expanded ? " expanded" : ""}`}
       data-rarity={rarity}
-      style={{ "--zone-accent": accent, ...(isTouch ? {} : tilt.style) }}
-      ref={isTouch ? undefined : tilt.ref}
-      onMouseMove={isTouch ? undefined : tilt.onMouseMove}
-      onMouseLeave={isTouch ? undefined : tilt.onMouseLeave}
+      style={{ "--zone-accent": accent, ...(isTouch || expanded ? {} : tilt.style) }}
+      ref={isTouch || expanded ? undefined : tilt.ref}
+      onMouseMove={isTouch || expanded ? undefined : tilt.onMouseMove}
+      onMouseLeave={isTouch || expanded ? undefined : tilt.onMouseLeave}
       onClick={e => e.stopPropagation()}
       initial={{ opacity: 0, scale: 0.3, filter: "blur(20px)" }}
       animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
@@ -45,6 +48,27 @@ export default function HolographicCard({ content, contentKey, accent, onClose, 
     >
       <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
         <ErrorBoundary><MagicalPortal cardKey={contentKey} /></ErrorBoundary>
+      </div>
+      <div className="holo-win-bar">
+        <span className="holo-win-label">{expanded ? "FULL VIEW" : "PROJECT / MILESTONE"}</span>
+        <div className="holo-win-acts">
+          <button
+            type="button"
+            className="holo-win-btn"
+            onClick={() => setExpandedCardId(v => (v === cardId ? null : cardId))}
+            aria-expanded={expanded}
+          >
+            {expanded ? "⤡ COMPACT" : "⤢ FULL VIEW"}
+          </button>
+          <button
+            type="button"
+            className="holo-win-btn close"
+            onClick={onClose}
+            aria-label="Close card"
+          >
+            ✕ CLOSE
+          </button>
+        </div>
       </div>
       <motion.div variants={container} initial="hidden" animate="show" className="holo-card-inner">
         {children}

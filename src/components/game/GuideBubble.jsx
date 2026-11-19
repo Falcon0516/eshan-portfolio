@@ -1,352 +1,417 @@
+"use client";
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 const IDLE_PHRASES = [
-  "💬 Got questions? Ask away!",
-  "🤖 Your personal AI guide here...",
-  "⚡ Try: \"What's his best project?\"",
-  "🎯 Ask me about Eshan's skills!",
-  "🏆 Curious about hackathon wins?",
-  "💡 Tip: Ask about certifications!",
-  "👋 Hey recruiter! I know everything.",
-  "🔍 \"What tech does he use?\"",
-  "📊 I have stats on everything...",
-  "🚀 Ask me anything about Eshan!",
+  "Ask about ARGUS, Saathi & 9 projects",
+  "Try: \"How does ARGUS work?\"",
+  "Ask about Eshan's CGPA or patents",
+  "Try: \"Take me to Hackathon wins\"",
+  "Conversation memory & shortcuts active"
 ];
 
-const DOODLES = [
-  "scanning databanks... 🔎",
-  "optimizing neural pathways... 🧠",
-  "calibrating sensors... ⚙️",
-  "browsing Eshan's portfolio... 📂",
-  "analyzing skill matrices... 📊",
-  "indexing hackathon records... 🏆",
-  "compiling achievements... ✨",
-  "loading project data... 💾",
-  "running diagnostics... 🔧",
-  "syncing with mainframe... 📡",
-];
+const MEM_KEY = 'game_argus_history';
+const MAX_TURNS = 16;
 
-export default function GuideBubble({ initialMsg, x, y, keepOpen, hidden }) {
+const ALLOWED_SLUGS = new Set([
+  'argus', 'axiom', 'kavach', 'personaforge',
+  'pro-rover', 'saathi', 'soil-and-toil', 'usb-tcp-bridge', 'verifarm'
+]);
+const ALLOWED_SECTIONS = new Set([
+  '#top', '#about', '#skills', '#work', '#awards', '#research', '#certs', '#gallery', '#contact'
+]);
+const ALLOWED_MODALS = new Set(['resume', 'explain']);
+const ALLOWED_EXT_EXACT = new Set([
+  'https://github.com/Falcon0516',
+  'https://www.linkedin.com/in/eshan-h',
+  'https://linkedin.com/in/eshan-h',
+  'https://argus-47.netlify.app',
+  'https://saathi-presentation.netlify.app',
+  'https://persona--forge.vercel.app',
+  'https://vigyantra.vercel.app',
+  'https://verifarm-2026.web.app',
+  'https://play.google.com/store/apps/details?id=com.verifarm.app',
+  'https://www.ijcrt.org/papers/IJCRTBE02004.pdf',
+  'mailto:eshanh051116@gmail.com'
+]);
+
+function isSafeAction(type, val) {
+  const t = String(type || '').trim().toUpperCase();
+  const v = String(val || '').trim();
+  if (!t || !v) return false;
+  if (t === 'ARCADE') {
+    if (v === '/' || v === '/Eshan_Portfolio/index.html' || v === '/arcade/index.html') return true;
+    const m = /^\/arcade\/projects\/([a-z0-9-]+)\/index\.html$/.exec(v);
+    return !!(m && ALLOWED_SLUGS.has(m[1]));
+  }
+  if (t === 'SECTION') return ALLOWED_SECTIONS.has(v);
+  if (t === 'MODAL') return ALLOWED_MODALS.has(v);
+  if (t === 'EXT') {
+    if (ALLOWED_EXT_EXACT.has(v)) return true;
+    return v.startsWith('https://github.com/Falcon0516/');
+  }
+  return false;
+}
+
+function renderInline(text) {
+  const parts = [];
+  const rx = /(\*\*[^*]+\*\*|`[^`]+`)/g;
+  let last = 0;
+  let m;
+  let idx = 0;
+  while ((m = rx.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith('**')) {
+      parts.push(<strong key={`b${idx++}`} className="guide-bold">{tok.slice(2, -2)}</strong>);
+    } else {
+      parts.push(<code key={`c${idx++}`} className="guide-code">{tok.slice(1, -1)}</code>);
+    }
+    last = m.index + tok.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts.length ? parts : text;
+}
+
+function parseReply(rawText) {
+  const actions = [];
+  const seen = new Set();
+  const cleanLines = [];
+
+  const lines = String(rawText || '').replace(/\r/g, '').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const match = trimmed.match(/^\[\[ACTION:([A-Za-z]+)\|([^|\]]+)\|([^\]]+)\]\]$/);
+    if (match) {
+      const [, type, label, val] = match;
+      const t = type.trim().toUpperCase();
+      const v = val.trim();
+      const key = `${t}:${v}`;
+      if (actions.length < 3 && isSafeAction(t, v) && !seen.has(key)) {
+        seen.add(key);
+        actions.push({ type: t, val: v, label: label.trim().slice(0, 42) });
+      }
+      continue;
+    }
+    const scrubbed = line.replace(/\[\[ACTION:([A-Za-z]+)\|([^|\]]+)\|([^\]]+)\]\]/g, (_f, type, label, val) => {
+      const t = type.trim().toUpperCase();
+      const v = val.trim();
+      const key = `${t}:${v}`;
+      if (actions.length < 3 && isSafeAction(t, v) && !seen.has(key)) {
+        seen.add(key);
+        actions.push({ type: t, val: v, label: label.trim().slice(0, 42) });
+      }
+      return '';
+    }).trimEnd();
+    if (scrubbed.trim() || cleanLines.length) cleanLines.push(scrubbed);
+  }
+  while (cleanLines.length && !cleanLines[cleanLines.length - 1].trim()) cleanLines.pop();
+  return { text: cleanLines.join('\n'), actions };
+}
+
+function FormattedReply({ rawText, onAction }) {
+  const { text, actions } = parseReply(rawText);
+  const lines = text.split('\n');
+  const blocks = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (!line) { i++; continue; }
+
+    if (line.startsWith('```')) {
+      const flowLines = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        if (lines[i].trim()) flowLines.push(lines[i].trim());
+        i++;
+      }
+      if (i < lines.length) i++;
+      blocks.push({ kind: 'flow', raw: flowLines.join(' → ') });
+      continue;
+    }
+
+    if ((line.includes('→') || line.includes('->')) && line.split(/→|->/).filter(s => s.trim()).length >= 2) {
+      blocks.push({ kind: 'flow', raw: line });
+      i++;
+      continue;
+    }
+
+    if (/^[-*•]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^[-*•]\s+/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^[-*•]\s+/, ''));
+        i++;
+      }
+      blocks.push({ kind: 'ul', items });
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^\d+\.\s+/, ''));
+        i++;
+      }
+      blocks.push({ kind: 'ol', items });
+      continue;
+    }
+
+    if (/^#{1,3}\s+/.test(line)) {
+      blocks.push({ kind: 'h', text: line.replace(/^#{1,3}\s+/, '') });
+      i++;
+      continue;
+    }
+
+    blocks.push({ kind: 'p', text: line });
+    i++;
+  }
+
+  return (
+    <div className="guide-rich">
+      {blocks.map((blk, idx) => {
+        if (blk.kind === 'h') return <div key={idx} className="guide-h">{renderInline(blk.text)}</div>;
+        if (blk.kind === 'p') return <p key={idx} className="guide-p">{renderInline(blk.text)}</p>;
+        if (blk.kind === 'ul') {
+          return (
+            <ul key={idx} className="guide-list">
+              {blk.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}
+            </ul>
+          );
+        }
+        if (blk.kind === 'ol') {
+          return (
+            <ol key={idx} className="guide-list num">
+              {blk.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}
+            </ol>
+          );
+        }
+        if (blk.kind === 'flow') {
+          const nodes = blk.raw.split(/→|->/).map(s => s.trim()).filter(Boolean);
+          return (
+            <div key={idx} className="guide-flow">
+              {nodes.map((node, j) => (
+                <React.Fragment key={j}>
+                  <span className="guide-flow-node">{node}</span>
+                  {j < nodes.length - 1 && <span className="guide-flow-arr">→</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          );
+        }
+        return null;
+      })}
+
+      {actions.length > 0 && (
+        <div className="guide-actions">
+          {actions.map((act, idx) => (
+            <button
+              key={idx}
+              type="button"
+              className={`guide-act-chip${act.type === 'ARCADE' ? ' arcade' : ''}`}
+              onClick={() => onAction && onAction(act.type, act.val)}
+            >
+              {act.label} ↗
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function localGameFallback(q) {
+  const s = q.toLowerCase();
+  if (/resume|cv|pdf|hire|download/.test(s)) {
+    return "**Eshan H** (B.E. CSE '27, SJBIT, **9.28 CGPA**) · Open the 2-page Resume viewer anytime.\n[[ACTION:MODAL|Preview / Download Resume|resume]]\n[[ACTION:EXT|LinkedIn Profile|https://www.linkedin.com/in/eshan-h]]";
+  }
+  if (/argus|patent|design|surveillance|police/.test(s)) {
+    return "**ARGUS** holds an Indian Design Registration (**No. 515509-001**, Journal **41/2026**).\n```\n6 RTSP Feeds -> YOLOv8n + ByteTrack -> LLaVA -> Officer Dashboard\n```\n[[ACTION:ARCADE|Play ARGUS Showcase|/arcade/projects/argus/index.html]]\n[[ACTION:SECTION|Research & Patent|#research]]";
+  }
+  if (/saathi|voice|call|kannada|hindi/.test(s)) {
+    return "**Saathi** is a multilingual phone voice AI (**English, Hindi, Kannada**), 2nd Place at AIVORA 2026.\n```\nInbound Call -> Speech STT -> LLM Agent -> Regional Voice Reply\n```\n[[ACTION:ARCADE|Play Saathi Showcase|/arcade/projects/saathi/index.html]]\n[[ACTION:EXT|Saathi Live Site|https://saathi-presentation.netlify.app]]";
+  }
+  if (/verifarm|farm|agri|flutter|play store/.test(s)) {
+    return "**VeriFarm** is live on Google Play — edge soil/crop diagnostics with blockchain traceability.\n- Offline-first Flutter app + edge sensors\n- Direct farmer marketplace & verification\n[[ACTION:ARCADE|Play VeriFarm Showcase|/arcade/projects/verifarm/index.html]]\n[[ACTION:EXT|Google Play Store|https://play.google.com/store/apps/details?id=com.verifarm.app]]";
+  }
+  if (/github|linkedin|contact|email|social/.test(s)) {
+    return "Connect with **Eshan H**:\n- GitHub: **github.com/Falcon0516**\n- LinkedIn: **linkedin.com/in/eshan-h**\n[[ACTION:EXT|GitHub Profile|https://github.com/Falcon0516]]\n[[ACTION:EXT|LinkedIn Profile|https://www.linkedin.com/in/eshan-h]]";
+  }
+  return "**ARGUS AI Guide Online** · Ask me about:\n- **Projects:** ARGUS, Axiom, Saathi, VeriFarm, Kavach\n- **Credentials:** 9.28 CGPA, 15+ Hackathons, Patent 515509-001\n[[ACTION:ARCADE|Open Project Arcade|/arcade/index.html]]\n[[ACTION:MODAL|View Resume|resume]]";
+}
+
+export default function GuideBubble({ initialMsg, keepOpen, hidden, onAction }) {
   const [chatMsg, setChatMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [displayMsg, setDisplayMsg] = useState(initialMsg);
-  const [idlePhrase, setIdlePhrase] = useState(IDLE_PHRASES[0]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [hasCustomPos, setHasCustomPos] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(true);
-  const [doodleText, setDoodleText] = useState(null);
-
-  // welcomePhase: 'waiting' → 'greeting' → 'done'
-  const [welcomePhase, setWelcomePhase] = useState('waiting');
-
-  const dragOffset = useRef({ x: 0, y: 0 });
-  const bubbleRef = useRef(null);
-  const idleTimer = useRef(null);
-  const doodleTimer = useRef(null);
-  const isUserResponse = useRef(false);
-
-  // ── Welcome sequence: wait → centered greeting → auto-dismiss ──
-  useEffect(() => {
-    if (!keepOpen || welcomePhase !== 'waiting') return;
-
-    // Show greeting after a brief delay
-    const t1 = setTimeout(() => setWelcomePhase('greeting'), 1200);
-
-    // Auto-dismiss after 8.2s total (1.2s delay + 7s display)
-    const t2 = setTimeout(() => {
-      setWelcomePhase('done');
-      setIsMinimized(true);
-    }, 8200);
-
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [keepOpen, welcomePhase]);
-
-  // Sync displayMsg when scripted guide messages come in
-  // Block during welcome greeting phase
-  useEffect(() => {
-    if (initialMsg && !isUserResponse.current && welcomePhase === 'done') {
-      setDisplayMsg(initialMsg);
+  const [messages, setMessages] = useState(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = sessionStorage.getItem(MEM_KEY);
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed.slice(-MAX_TURNS) : [];
+    } catch {
+      return [];
     }
-  }, [initialMsg, welcomePhase]);
+  });
+  const [idlePhrase, setIdlePhrase] = useState(IDLE_PHRASES[0]);
+  const [isMinimized, setIsMinimized] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Cycle idle phrases every 4 seconds
+  const msgsRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.setItem(MEM_KEY, JSON.stringify(messages.slice(-MAX_TURNS)));
+    } catch {}
+  }, [messages]);
+
   useEffect(() => {
     if (!keepOpen) return;
     let idx = 0;
-    idleTimer.current = setInterval(() => {
+    const t = setInterval(() => {
       idx = (idx + 1) % IDLE_PHRASES.length;
       setIdlePhrase(IDLE_PHRASES[idx]);
-    }, 4000);
-    return () => clearInterval(idleTimer.current);
+    }, 4500);
+    return () => clearInterval(t);
   }, [keepOpen]);
 
-  // Random doodle every 12-20 seconds
   useEffect(() => {
-    if (!keepOpen) return;
-    const scheduleDoodle = () => {
-      const delay = 12000 + Math.random() * 8000;
-      doodleTimer.current = setTimeout(() => {
-        if (!isUserResponse.current) {
-          const d = DOODLES[Math.floor(Math.random() * DOODLES.length)];
-          setDoodleText(d);
-          setTimeout(() => setDoodleText(null), 3000);
-        }
-        scheduleDoodle();
-      }, delay);
-    };
-    scheduleDoodle();
-    return () => clearTimeout(doodleTimer.current);
-  }, [keepOpen]);
+    if (msgsRef.current) {
+      msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
+    }
+  }, [messages, isMinimized, isExpanded]);
+
+  const clearHistory = useCallback(() => {
+    setMessages([]);
+    try { sessionStorage.removeItem(MEM_KEY); } catch {}
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!chatMsg.trim() || loading) return;
+    const trimmed = chatMsg.trim();
+    if (!trimmed || loading) return;
 
-    isUserResponse.current = true;
-    setDisplayMsg("Processing query...");
+    const prevHistory = messages.slice(-12);
+    const nextWithUser = [...messages, { role: 'user', content: trimmed }].slice(-MAX_TURNS);
+    setMessages(nextWithUser);
+    setChatMsg('');
     setLoading(true);
-    setDoodleText(null);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: chatMsg })
+        body: JSON.stringify({
+          message: trimmed,
+          project: 'Portfolio Game',
+          history: prevHistory
+        })
       });
       const data = await res.json();
-      setDisplayMsg(data.reply || "Error parsing response.");
-    } catch (err) {
-      setDisplayMsg("Connection to mainframe failed.");
+      const replyText = (res.ok && data.reply) ? data.reply : localGameFallback(trimmed);
+      setMessages(curr => [...curr, { role: 'assistant', content: replyText }].slice(-MAX_TURNS));
+    } catch {
+      setMessages(curr => [...curr, { role: 'assistant', content: localGameFallback(trimmed) }].slice(-MAX_TURNS));
     } finally {
       setLoading(false);
-      setChatMsg('');
-      setTimeout(() => { isUserResponse.current = false; }, 15000);
     }
   };
 
-  // ── Drag logic ──
-  const onPointerDown = useCallback((e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
-    e.preventDefault();
-    const rect = bubbleRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    dragOffset.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    setIsDragging(true);
-  }, []);
+  if (hidden || !keepOpen) return null;
 
-  const onPointerMove = useCallback((e) => {
-    if (!isDragging) return;
-    setPosition({ x: e.clientX - dragOffset.current.x, y: e.clientY - dragOffset.current.y });
-    setHasCustomPos(true);
-  }, [isDragging]);
-
-  const onPointerUp = useCallback(() => setIsDragging(false), []);
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-    }
-    return () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-    };
-  }, [isDragging, onPointerMove, onPointerUp]);
-
-  // ── Render nothing when hidden or before game starts ──
-  if (hidden) return null;
-  if (!keepOpen && !displayMsg) return null;
-  if (welcomePhase === 'waiting') return null;
-
-  // ══════════════════════════════════════════════════════
-  // PHASE: GREETING — centered overlay introducing ARGUS
-  // ══════════════════════════════════════════════════════
-  if (welcomePhase === 'greeting') {
-    const dismissGreeting = () => {
-      setWelcomePhase('done');
-      setIsMinimized(true);
-    };
-
-    return (
-      <div
-        onClick={dismissGreeting}
-        style={{
-          position: 'fixed', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 300, pointerEvents: 'auto',
-          background: 'rgba(0,0,0,0.55)',
-          animation: 'fadeInUp 0.4s ease',
-        }}
-      >
-        <div
-          className="guide-bubble"
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            pointerEvents: 'auto',
-            display: 'flex', flexDirection: 'column', gap: '8px',
-            maxWidth: '300px', minWidth: '240px',
-            animation: 'bubble-in 0.4s ease',
-            textAlign: 'center',
-            padding: '16px 20px',
-          }}
-        >
-          <div style={{ fontSize: '36px' }}>🤖</div>
-          <div className="guide-name" style={{ margin: 0, textAlign: 'center', fontSize: '9px' }}>
-            ARGUS — AI GUIDE
-          </div>
-          <div className="guide-msg" style={{ fontSize: '12px', lineHeight: '1.5', color: '#00ffff' }}>
-            Hey! I&apos;m <strong>ARGUS</strong>. Whenever you need help or want to know about Eshan, just tap my icon in the corner!
-          </div>
-
-          <div style={{ 
-            marginTop: '10px', 
-            fontSize: '10px', 
-            color: '#aaa', 
-            background: 'rgba(0,0,0,0.5)', 
-            padding: '8px', 
-            borderRadius: '4px',
-            border: '1px solid rgba(255,255,255,0.1)'
-          }}>
-            <div style={{ marginBottom: '4px', color: '#fff' }}>📱 Mobile Experience:</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
-              <span style={{ color: '#00ff88' }}>✅ Portrait</span>
-              <span style={{ color: '#ff0055' }}>❌ Landscape</span>
-            </div>
-          </div>
-          <button
-            onClick={dismissGreeting}
-            style={{
-              marginTop: '2px', padding: '8px 20px',
-              background: 'cyan', color: '#000',
-              border: 'none', borderRadius: '6px',
-              fontSize: '11px', fontWeight: 'bold',
-              cursor: 'pointer',
-              fontFamily: '"Share Tech Mono", monospace',
-              letterSpacing: '1px',
-            }}
-          >
-            GOT IT!
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ══════════════════════════════════════════════════════
-  // Normal: minimized orb (top-right corner)
-  // ══════════════════════════════════════════════════════
   if (isMinimized) {
     return (
-      <div
-        ref={bubbleRef}
+      <button
+        type="button"
+        className="guide-orb"
         onClick={() => setIsMinimized(false)}
-        style={{
-          position: 'fixed', top: 44, right: 12,
-          pointerEvents: 'auto', zIndex: 200, cursor: 'pointer',
-          background: 'rgba(0,10,20,0.85)',
-          border: '1px solid cyan', borderRadius: '50%',
-          width: 36, height: 36,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '18px',
-          boxShadow: '0 0 12px rgba(0,255,255,0.4)',
-          animation: 'pulse-glow 2s ease-in-out infinite',
-        }}
-        title="Ask ARGUS"
+        title="Ask ARGUS AI Assistant"
+        aria-label="Open ARGUS AI Assistant"
       >
-        🤖
-      </div>
+        <span className="guide-orb-icon" aria-hidden="true">🤖</span>
+        <span className="guide-orb-tag">ARGUS AI</span>
+      </button>
     );
   }
-
-  // ══════════════════════════════════════════════════════
-  // Normal: expanded chat panel
-  // ══════════════════════════════════════════════════════
-  const bubbleStyle = hasCustomPos
-    ? { left: position.x, top: position.y, position: 'fixed' }
-    : { left: 12, top: 50, position: 'fixed' };
 
   return (
     <div
-      ref={bubbleRef}
-      onPointerDown={onPointerDown}
-      className="guide-bubble"
-      style={{
-        ...bubbleStyle,
-        pointerEvents: 'auto',
-        display: 'flex', flexDirection: 'column', gap: '4px',
-        zIndex: 200,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        touchAction: 'none', userSelect: 'none',
-      }}
+      className={`guide-bubble${isExpanded ? ' expanded' : ''}`}
+      role="dialog"
+      aria-label="ARGUS AI Chat"
+      onClick={(e) => e.stopPropagation()}
     >
-      {/* Idle phrase ticker */}
-      <div style={{
-        fontSize: '9px', color: '#00ffff88', textAlign: 'center',
-        fontFamily: '"Share Tech Mono", monospace',
-        letterSpacing: '0.5px', animation: 'fadeInUp 0.5s ease', minHeight: '12px',
-      }}>
-        {idlePhrase}
-      </div>
-
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="guide-name" style={{ margin: 0, fontSize: '7px' }}>🤖 ARGUS</div>
-        <div style={{ display: 'flex', gap: '4px' }}>
+      <div className="guide-hdr">
+        <div className="guide-name">🤖 ARGUS AI · GAME MODE</div>
+        <div className="guide-win-acts">
+          {messages.length > 0 && (
+            <button type="button" className="guide-hdr-btn" onClick={clearHistory} title="Clear conversation memory">
+              Clear
+            </button>
+          )}
           <button
-            onClick={(e) => { e.stopPropagation(); setHasCustomPos(false); }}
-            title="Reset position"
-            style={{ background: 'none', border: '1px solid #00ffff44', color: 'cyan', fontSize: '9px', cursor: 'pointer', borderRadius: '3px', padding: '1px 4px', lineHeight: 1 }}
+            type="button"
+            className="guide-hdr-btn"
+            onClick={() => setIsExpanded(v => !v)}
+            aria-expanded={isExpanded}
+            title={isExpanded ? 'Compact view' : 'Full view'}
           >
-            ⟲
+            {isExpanded ? '⤡' : '⤢'}
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-            title="Minimize"
-            style={{ background: 'none', border: '1px solid #00ffff44', color: 'cyan', fontSize: '9px', cursor: 'pointer', borderRadius: '3px', padding: '1px 4px', lineHeight: 1 }}
+            type="button"
+            className="guide-hdr-btn close"
+            onClick={() => { setIsMinimized(true); setIsExpanded(false); }}
+            title="Minimize chat"
+            aria-label="Minimize chat"
           >
             ✕
           </button>
         </div>
       </div>
 
-      {/* Doodle or message */}
-      <div className="guide-msg" style={{ fontSize: '11px', lineHeight: '1.3', maxHeight: '80px', overflowY: 'auto' }}>
-        {doodleText && !loading ? (
-          <span style={{ color: '#00ffff66', fontStyle: 'italic' }}>{doodleText}</span>
+      <div className="guide-subticker">{idlePhrase}</div>
+
+      <div ref={msgsRef} className="guide-thread">
+        {messages.length === 0 ? (
+          <div className="guide-msg-card assistant">
+            <FormattedReply
+              rawText={
+                initialMsg
+                  ? `**Falcon Hint:** ${initialMsg}\n\nAsk me anything about Eshan's projects, patents, or skills!`
+                  : "**ARGUS AI Ready.** Ask about Eshan's 9 projects, **Patent 515509-001**, or request a shortcut below."
+              }
+              onAction={onAction}
+            />
+          </div>
         ) : (
-          displayMsg || "Systems online. How can I help?"
+          messages.map((m, idx) => (
+            <div key={idx} className={`guide-msg-card ${m.role === 'user' ? 'user' : 'assistant'}`}>
+              {m.role === 'user' ? (
+                <span>{m.content}</span>
+              ) : (
+                <FormattedReply rawText={m.content} onAction={onAction} />
+              )}
+            </div>
+          ))
+        )}
+        {loading && (
+          <div className="guide-msg-card assistant typing">Thinking with context...</div>
         )}
       </div>
 
-      {/* Chat input */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '3px' }}>
+      <form onSubmit={handleSubmit} className="guide-form">
         <input
           type="text"
           value={chatMsg}
           onChange={(e) => setChatMsg(e.target.value)}
-          placeholder="Ask me anything..."
-          style={{
-            flex: 1, background: 'rgba(0,0,0,0.6)',
-            border: '1px solid #00ffff55', color: 'cyan',
-            padding: '4px 6px', fontSize: '11px', borderRadius: '4px',
-            outline: 'none', fontFamily: '"Share Tech Mono", monospace',
-          }}
+          placeholder="Ask ARGUS about Eshan..."
+          className="guide-input"
           disabled={loading}
           onKeyDown={(e) => e.stopPropagation()}
           onKeyUp={(e) => e.stopPropagation()}
         />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            background: loading ? '#00666699' : 'cyan', color: 'black',
-            border: 'none', padding: '4px 8px', fontSize: '10px',
-            cursor: loading ? 'not-allowed' : 'pointer', borderRadius: '4px',
-            fontWeight: 'bold', fontFamily: '"Share Tech Mono", monospace',
-            letterSpacing: '1px',
-          }}
-        >
+        <button type="submit" disabled={loading} className="guide-send">
           {loading ? '...' : 'SEND'}
         </button>
       </form>

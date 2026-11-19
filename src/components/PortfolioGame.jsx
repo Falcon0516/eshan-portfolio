@@ -87,6 +87,7 @@ export default function PortfolioGame() {
     cardShowing: false,
     minigameShowing: false,
     resumeShowing: false,
+    tutorialShowing: false,
   });
   
   const minigamePlayCounts = useRef({
@@ -115,9 +116,12 @@ export default function PortfolioGame() {
   const [vehicles, setVehicles] = useState([]);
   const [showFinish, setShowFinish] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const [resumeExpanded, setResumeExpanded] = useState(false);
   const [finishShown, setFinishShown] = useState(false);
   const [toasts, setToasts] = useState([]);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutStep, setTutStep] = useState(0); // 0 = off, 1..4 = active step
+  const [tutRect, setTutRect] = useState(null);
+  const [navTransition, setNavTransition] = useState(null); // null | { mode: 'pro' | 'arcade', href: string }
   const [skillTreeActive, setSkillTreeActive] = useState(false);
   const [skillTreeDismissed, setSkillTreeDismissed] = useState(false);
   const [minigame, setMinigame] = useState(null); // { category, content, block }
@@ -159,25 +163,74 @@ export default function PortfolioGame() {
     scoreSpring.set(score);
   }, [score, scoreSpring]);
 
-  // Show tutorial overlay for touch / mobile users
+  const openTutorial = useCallback((step = 1) => {
+    setTutStep(step);
+    stateRef.current.tutorialShowing = true;
+  }, []);
+
+  const finishTutorial = useCallback(() => {
+    setTutStep(0);
+    setTutRect(null);
+    stateRef.current.tutorialShowing = false;
+    try { localStorage.setItem("game_tut_done", "1"); } catch {}
+  }, []);
+
+  // Auto-start first-visit interactive walkthrough once after game launch
   useEffect(() => {
     if (!started) return;
-    // Detect touch: use matchMedia + ontouchstart for reliability
-    const isTouch = typeof window !== "undefined" && (
-      "ontouchstart" in window ||
-      navigator.maxTouchPoints > 0 ||
-      window.matchMedia("(pointer: coarse)").matches
-    );
-    if (isTouch) {
-      // Small delay so the UI is settled
-      const delay = setTimeout(() => {
-        setShowTutorial(true);
-        const hide = setTimeout(() => setShowTutorial(false), 6000);
-        return () => clearTimeout(hide);
-      }, 500);
-      return () => clearTimeout(delay);
-    }
-  }, [started]);
+    try {
+      if (localStorage.getItem("game_tut_done") === "1") return;
+    } catch {}
+    const t = setTimeout(() => {
+      openTutorial(1);
+    }, 650);
+    return () => clearTimeout(t);
+  }, [started, openTutorial]);
+
+  // Measure target element rect for Spotlight Tutorial
+  useEffect(() => {
+    if (!tutStep) return;
+    const measure = () => {
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let el = null;
+      if (tutStep === 1) {
+        el = document.querySelector(".d-pad");
+        if (el && getComputedStyle(el).display === "none") el = null;
+        if (!el) {
+          setTutRect({ x: Math.max(16, vw / 2 - 170), y: vh - 110, w: Math.min(340, vw - 32), h: 76 });
+          return;
+        }
+      } else if (tutStep === 2) {
+        el = document.querySelector(".jump-btn");
+        if (el && getComputedStyle(el).display === "none") el = null;
+        if (!el) {
+          setTutRect({ x: Math.max(16, vw / 2 - 130), y: Math.max(80, vh * 0.42), w: 260, h: 120 });
+          return;
+        }
+      } else if (tutStep === 3) {
+        el = document.querySelector(".hud-quick-actions");
+      } else if (tutStep === 4) {
+        el = document.querySelector(".guide-orb") || document.querySelector(".guide-bubble");
+      }
+      if (el) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          const pad = 8;
+          setTutRect({
+            x: Math.max(4, r.left - pad),
+            y: Math.max(4, r.top - pad),
+            w: Math.min(vw - 8, r.width + pad * 2),
+            h: Math.min(vh - 8, r.height + pad * 2),
+          });
+          return;
+        }
+      }
+      setTutRect(null);
+    };
+    const t = setTimeout(measure, 40);
+    window.addEventListener("resize", measure);
+    return () => { clearTimeout(t); window.removeEventListener("resize", measure); };
+  }, [tutStep]);
 
   const toggleMusic = useCallback(() => {
     setMusicOn(p => {
@@ -188,6 +241,16 @@ export default function PortfolioGame() {
   }, []);
   const toggleSfx = useCallback(() => setSfxOn(p => !p), []);
 
+  const triggerNavTransition = useCallback((mode, href) => {
+    if (navTransition) return;
+    if (musicRef.current) { try { musicRef.current.pause(); } catch {} }
+    setNavTransition({ mode, href });
+    const delay = prefersReducedMotion ? 90 : 680;
+    setTimeout(() => {
+      window.location.assign(href);
+    }, delay);
+  }, [navTransition]);
+
   const skipToHighlights = useCallback(() => {
     setStarted(true); setTimeout(() => setTitleHidden(true), 1000);
     try { getAudio().resume(); } catch (e) {}
@@ -197,10 +260,7 @@ export default function PortfolioGame() {
     }
     showToast("Recruiter Mode: Skipping to Projects");
     if (gameRef.current && gameRef.current.camera) {
-      // 6400 is the PROJECTS zone
       gameRef.current.camera.x = 6200;
-      // We also need to move the player! But player is scoped inside useEffect.
-      // We can pass a hint via stateRef
       stateRef.current.recruiterSkip = true;
     }
   }, [showToast, sfxOn]);
@@ -220,25 +280,69 @@ export default function PortfolioGame() {
 
   const openResume = useCallback(() => {
     setShowResume(true);
+    setResumeExpanded(false);
     stateRef.current.resumeShowing = true;
   }, []);
 
   const closeResume = useCallback(() => {
     setShowResume(false);
+    setResumeExpanded(false);
     stateRef.current.resumeShowing = false;
   }, []);
 
+  const handleGuideAction = useCallback((type, val) => {
+    if (type === "MODAL" && val === "resume") {
+      openResume();
+      return;
+    }
+    if (type === "ARCADE") {
+      if (val === "/Eshan_Portfolio/index.html") {
+        triggerNavTransition("pro", val);
+      } else if (val && val.startsWith("/arcade/")) {
+        triggerNavTransition("arcade", val);
+      } else {
+        const url = val === "hub" ? "/arcade/index.html?from=game" : `/arcade/projects/${val}/index.html`;
+        triggerNavTransition("arcade", url);
+      }
+      return;
+    }
+    if (type === "EXT") {
+      window.open(val, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (type === "SECTION") {
+      const cleanId = String(val || "").replace(/^#/, "");
+      const zoneXMap = {
+        top: 80,
+        about: 1350,
+        skills: 4700,
+        work: 6600,
+        projects: 6600,
+        awards: 13400,
+        certs: 16800,
+        contact: 18550,
+      };
+      if (zoneXMap[cleanId] != null && gameRef.current?.moveToX) {
+        gameRef.current.moveToX(zoneXMap[cleanId]);
+        showToast(`Warped to ${cleanId.toUpperCase()}`);
+      } else {
+        triggerNavTransition("pro", `/Eshan_Portfolio/index.html#${cleanId}`);
+      }
+    }
+  }, [openResume, triggerNavTransition, showToast]);
+
   useEffect(() => {
-    if (!showResume) return;
+    if (!showResume && !tutStep) return;
     const onEsc = (e) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        closeResume();
+        if (showResume) closeResume();
+        if (tutStep) finishTutorial();
       }
     };
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
-  }, [showResume, closeResume]);
+  }, [showResume, closeResume, tutStep, finishTutorial]);
 
   const onCrateDone = useCallback(() => {
     setRevealStage("card");
@@ -361,7 +465,7 @@ export default function PortfolioGame() {
 
   // Canvas click handler
   const handleCanvasClick = useCallback((e) => {
-    if (!gameRef.current || stateRef.current.cardShowing || stateRef.current.minigameShowing || stateRef.current.resumeShowing) return;
+    if (!gameRef.current || stateRef.current.cardShowing || stateRef.current.minigameShowing || stateRef.current.resumeShowing || stateRef.current.tutorialShowing) return;
     const { blocks, camera } = gameRef.current;
     const rect = e.target.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
@@ -426,7 +530,14 @@ export default function PortfolioGame() {
 
     const takeover = { active: false, img: null, opacity: 0, targetOpacity: 0, scale: 1, scaleDir: 0.0003, tintColor: "rgba(0,255,255,0.12)", triggerX: 0 };
 
-    gameRef.current = { blocks, imageFrames, camera, takeover, preloadedImages, hitStop: 0, shakeTimer: 0 };
+    const moveToX = (targetX) => {
+      player.x = Math.max(0, Math.min(WORLD_WIDTH - PLAYER_W, targetX));
+      player.vx = 0;
+      player.vy = 0;
+      camera.x = Math.max(0, Math.min(WORLD_WIDTH - W, player.x - W * 0.33));
+    };
+
+    gameRef.current = { blocks, imageFrames, camera, takeover, preloadedImages, hitStop: 0, shakeTimer: 0, moveToX };
 
     // Shared "open this block's card" step — used directly for blocks with no
     // mini-game, and as the completion step once a mini-game finishes/is skipped.
@@ -437,10 +548,11 @@ export default function PortfolioGame() {
     gameRef.current.proceedToCard = proceedToCard;
 
     const keys = keysRef.current;
-    const onKeyDown = (e) => { 
-      keys[e.code] = true; 
-      if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.code)) e.preventDefault(); 
-      if (stateRef.current.resumeShowing) return;
+    const onKeyDown = (e) => {
+      if (e.target && e.target.closest && e.target.closest("input, textarea, select")) return;
+      keys[e.code] = true;
+      if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.code)) e.preventDefault();
+      if (stateRef.current.resumeShowing || stateRef.current.tutorialShowing) return;
       if (stateRef.current.cardShowing) { 
         if (e.code === "Escape") closeCard();
         else if (e.code === "Enter" && !(e.target && e.target.closest && e.target.closest("a, button"))) closeCard();
@@ -494,7 +606,7 @@ export default function PortfolioGame() {
     let animId, lastTime = performance.now();
 
     function update(dt) {
-      if (stateRef.current.cardShowing || stateRef.current.minigameShowing || stateRef.current.resumeShowing) return;
+      if (stateRef.current.cardShowing || stateRef.current.minigameShowing || stateRef.current.resumeShowing || stateRef.current.tutorialShowing) return;
       if (gameRef.current.hitStop > 0) {
         gameRef.current.hitStop -= dt;
         return;
@@ -762,21 +874,47 @@ export default function PortfolioGame() {
     };
   }, [started, openCard, closeCard]);
 
-  // Mobile touch handlers
+  // Mobile touch handlers (D-pad + canvas horizontal swipe & jump)
   const handleTouchStart = (dir) => { keysRef.current[dir] = true; };
   const handleTouchEnd = (dir) => { keysRef.current[dir] = false; };
   
-  const swipeRef = useRef({ y: 0 });
-  const onTouchStart = (e) => { swipeRef.current.y = e.touches[0].clientY; };
-  const onTouchEnd = (e) => { 
-    if(swipeRef.current.y - e.changedTouches[0].clientY > 40) {
-      keysRef.current['TouchJump'] = true;
-      setTimeout(() => keysRef.current['TouchJump'] = false, 150);
+  const swipeRef = useRef({ x: 0, y: 0, active: false });
+  const isUiTouch = (target) => !!(target && target.closest && target.closest(".mobile-controls, .hud-quick-actions, .holo-card, .game-resume-overlay, .game-tut-overlay, .guide-bubble, .guide-orb, .title-screen"));
+  const clearSwipeKeys = () => {
+    keysRef.current["TouchLeft"] = false;
+    keysRef.current["TouchRight"] = false;
+  };
+  const onTouchStart = (e) => {
+    if (!started || stateRef.current.tutorialShowing || stateRef.current.cardShowing || stateRef.current.resumeShowing) return;
+    if (isUiTouch(e.target) || !e.touches[0]) return;
+    swipeRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: true };
+  };
+  const onTouchMove = (e) => {
+    if (!swipeRef.current.active || !e.touches[0]) return;
+    const dx = e.touches[0].clientX - swipeRef.current.x;
+    if (dx < -18) {
+      keysRef.current["TouchRight"] = true;
+      keysRef.current["TouchLeft"] = false;
+    } else if (dx > 18) {
+      keysRef.current["TouchLeft"] = true;
+      keysRef.current["TouchRight"] = false;
+    } else {
+      clearSwipeKeys();
+    }
+  };
+  const onTouchEnd = (e) => {
+    if (!swipeRef.current.active) return;
+    swipeRef.current.active = false;
+    clearSwipeKeys();
+    const touch = e.changedTouches && e.changedTouches[0];
+    if (touch && swipeRef.current.y - touch.clientY > 42) {
+      keysRef.current["TouchJump"] = true;
+      setTimeout(() => { keysRef.current["TouchJump"] = false; }, 160);
     }
   };
 
   return (
-    <div className="game-wrap" style={{ userSelect: 'none' }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <div className="game-wrap" style={{ userSelect: 'none' }} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
       {started && zoneName !== "AGRICULTURE" && (
         <div className="cli-terminal">
           {cliLines.map((l, i) => <div key={i} className="cli-line">{l.startsWith("$") ? <><span className="cli-prompt">falcon@argus</span> {l}</> : l}</div>)}
@@ -813,50 +951,32 @@ export default function PortfolioGame() {
  \\____/ \\____/ \\_| |_\\_| |_/\\_| \\_/`}</pre>
           <p className="title-sub">A PLAYABLE PORTFOLIO</p>
           <p className="title-desc">Explore portals, memory walls, and biomes in this interactive odyssey.</p>
-          <div style={{display:'flex', gap:'20px', justifyContent:'center', marginTop: '20px', flexWrap: 'wrap'}}>
-            
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                style={{ position: 'absolute', top: '-40px', fontSize: '10px', color: '#00ffff', background: 'rgba(0,0,0,0.8)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #00ffff', whiteSpace: 'nowrap' }}
-              >
-                Want to explore and play?
-                <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #00ffff', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
-              </motion.div>
-              <button className="title-start" onClick={startGame}>▶ PRESS START</button>
+          <div className="title-actions-grid">
+            <div className="title-action-item">
+              <span className="title-action-hint cyan">Explore &amp; play the interactive world</span>
+              <button type="button" className="title-start" onClick={startGame}>▶ PRESS START</button>
             </div>
 
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-               <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.5 }}
-                style={{ position: 'absolute', top: '-40px', fontSize: '10px', color: '#ff006e', background: 'rgba(0,0,0,0.8)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #ff006e', whiteSpace: 'nowrap' }}
-              >
-                Are you a recruiter? View professional version
-                <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #ff006e', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
-              </motion.div>
-              <button className="title-start" style={{background:'transparent', border:'1px solid #ff006e', color:'#ff006e'}} onClick={() => window.open('/Eshan_Portfolio/index.html', '_blank')}>▶ RECRUITER SKIP</button>
+            <div className="title-action-item">
+              <span className="title-action-hint pink">Recruiter fast-track · Executive version</span>
+              <button type="button" className="title-start pink" onClick={() => triggerNavTransition("pro", "/Eshan_Portfolio/index.html")}>▶ RECRUITER SKIP</button>
             </div>
 
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3, duration: 0.5 }}
-                style={{ position: 'absolute', top: '-40px', fontSize: '10px', color: '#ffd700', background: 'rgba(0,0,0,0.8)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #ffd700', whiteSpace: 'nowrap' }}
+            <div className="title-action-item">
+              <span className="title-action-hint gold">Play 9 interactive project showcases</span>
+              <a
+                className="title-start gold"
+                href="/arcade/index.html?from=game"
+                onClick={(e) => { e.preventDefault(); triggerNavTransition("arcade", "/arcade/index.html?from=game"); }}
               >
-                Play 9 interactive project showcases
-                <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #ffd700', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
-              </motion.div>
-              <a className="title-start" style={{background:'transparent', border:'1px solid #ffd700', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}} href="/arcade/index.html?from=game">🕹️ PROJECT ARCADE</a>
-            </div>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
-              <button type="button" className="title-start" style={{background:'transparent', border:'1px solid #39ff14', color:'#39ff14'}} onClick={openResume}>📄 RESUME</button>
+                🕹️ PROJECT ARCADE
+              </a>
             </div>
 
+            <div className="title-action-item">
+              <span className="title-action-hint green">Preview 2 pages &amp; download PDF</span>
+              <button type="button" className="title-start green" onClick={openResume}>📄 RESUME</button>
+            </div>
           </div>
           <div className="title-controls"><kbd>←</kbd> <kbd>→</kbd> Move &bull; <kbd>SPACE</kbd> Jump &bull; <kbd>ENTER</kbd> Open Card</div>
         </div>
@@ -905,7 +1025,7 @@ export default function PortfolioGame() {
       </AnimatePresence>
 
       {zoneLabel && <div className="zone-enter" key={zoneLabel}><div className="zone-num">{zoneName}</div><div className="zone-name">{zoneLabel}</div></div>}
-      <GuideBubble initialMsg={guideMsg} x={guideBubblePos.x} y={guideBubblePos.y} keepOpen={started} hidden={!!activeCard || revealStage !== "idle" || skillTreeActive || !!minigame || showFinish || showResume} />
+      <GuideBubble initialMsg={guideMsg} keepOpen={started} hidden={!!activeCard || revealStage !== "idle" || skillTreeActive || !!minigame || showFinish || showResume} onAction={handleGuideAction} />
       {blockHint && <div className="block-hint" style={{ left: blockHintPos.x, top: blockHintPos.y }}>{blockHint}</div>}
 
       <div className="toast-container">
@@ -944,7 +1064,6 @@ export default function PortfolioGame() {
 
       {revealStage === "card" && revealContent && (
         <div className="card-overlay" onClick={closeCard}>
-          <button className="card-close" onClick={closeCard}>✕</button>
           <HolographicCard content={revealContent} contentKey={revealContentKey} accent={revealAccent} onClose={closeCard}>
             <div onClick={e => e.stopPropagation()}>
               {revealContent.images && <CylinderCarousel images={revealContent.images} />}
@@ -958,7 +1077,7 @@ export default function PortfolioGame() {
                 {revealContent.narration && <div className="card-narration"><TypeWriter text={revealContent.narration} /></div>}
                 {revealContent.tech && <div className="card-tech">{revealContent.tech.map(t => <span key={t}>{t}</span>)}</div>}
                 <div className="card-links">
-                  {revealContent.arcadePortal && <a href={revealContent.arcadePortal}>ENTER PROJECT ARCADE →</a>}
+                  {revealContent.arcadePortal && <a href={revealContent.arcadePortal} onClick={(e) => { e.preventDefault(); closeCard(); triggerNavTransition("arcade", revealContent.arcadePortal); }}>ENTER PROJECT ARCADE →</a>}
                   {revealContent.showcase && <a href={revealContent.showcase}>PLAY SHOWCASE →</a>}
                   {revealContent.link && <a href={revealContent.link} target="_blank" rel="noopener noreferrer">OPEN →</a>}
                   {revealContent.github && <a href={revealContent.github} target="_blank" rel="noopener noreferrer" className="secondary">GITHUB →</a>}
@@ -972,7 +1091,6 @@ export default function PortfolioGame() {
       {/* Legacy activeCard fallback for any path that still uses openCard directly */}
       {activeCard && revealStage === "idle" && (
         <div className="card-overlay" onClick={closeCard}>
-          <button className="card-close" onClick={closeCard}>✕</button>
           <HolographicCard content={activeCard} contentKey={Object.keys(BLOCK_CONTENT).find(k => BLOCK_CONTENT[k] === activeCard)} accent={revealAccent} onClose={closeCard}>
             <div onClick={e => e.stopPropagation()}>
               {activeCard.images && <CylinderCarousel images={activeCard.images} />}
@@ -986,7 +1104,7 @@ export default function PortfolioGame() {
                 {activeCard.narration && <div className="card-narration"><TypeWriter text={activeCard.narration} /></div>}
                 {activeCard.tech && <div className="card-tech">{activeCard.tech.map(t => <span key={t}>{t}</span>)}</div>}
                 <div className="card-links">
-                  {activeCard.arcadePortal && <a href={activeCard.arcadePortal}>ENTER PROJECT ARCADE →</a>}
+                  {activeCard.arcadePortal && <a href={activeCard.arcadePortal} onClick={(e) => { e.preventDefault(); closeCard(); triggerNavTransition("arcade", activeCard.arcadePortal); }}>ENTER PROJECT ARCADE →</a>}
                   {activeCard.showcase && <a href={activeCard.showcase}>PLAY SHOWCASE →</a>}
                   {activeCard.link && <a href={activeCard.link} target="_blank" rel="noopener noreferrer">OPEN →</a>}
                   {activeCard.github && <a href={activeCard.github} target="_blank" rel="noopener noreferrer" className="secondary">GITHUB →</a>}
@@ -1010,10 +1128,18 @@ export default function PortfolioGame() {
 
       {started && revealStage === "idle" && !activeCard && !minigame && !(skillTreeActive && !skillTreeDismissed) && !showFinish && !showResume && (
         <div className="hud-quick-actions">
-           <a className="music-toggle" style={{position:'static', fontSize:'10px', borderColor:'rgba(255,215,0,0.45)', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}} href="/arcade/index.html?from=game">🕹️ ARCADE</a>
+           <a
+             className="music-toggle"
+             style={{position:'static', fontSize:'10px', borderColor:'rgba(255,215,0,0.45)', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}}
+             href="/arcade/index.html?from=game"
+             onClick={(e) => { e.preventDefault(); triggerNavTransition("arcade", "/arcade/index.html?from=game"); }}
+           >
+             🕹️ ARCADE
+           </a>
            <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px', borderColor:'rgba(0,255,255,0.45)', color:'#00ffff'}} onClick={openResume}>📄 RESUME</button>
            <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px'}} onClick={toggleMusic}>BGM: {musicOn ? "ON" : "OFF"}</button>
            <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px'}} onClick={toggleSfx}>SFX: {sfxOn ? "ON" : "OFF"}</button>
+           <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px', borderColor:'rgba(57,255,20,0.45)', color:'#39ff14'}} onClick={() => openTutorial(1)} aria-label="Replay navigation tutorial">? GUIDE</button>
         </div>
       )}
 
@@ -1025,12 +1151,13 @@ export default function PortfolioGame() {
           aria-label="Eshan H Resume Preview"
           onClick={(e) => { if (e.target === e.currentTarget) closeResume(); }}
         >
-          <div className="game-resume-modal">
+          <div className={`game-resume-modal${resumeExpanded ? " expanded" : ""}`}>
             <div className="game-resume-head">
               <span className="game-resume-title">ESHAN H · RESUME (2 PAGES)</span>
               <div className="game-resume-acts">
                 <a className="game-resume-btn dl" href="/resume/Eshan_H_Resume.pdf" download="Eshan_H_Resume.pdf">⬇ DOWNLOAD PDF</a>
                 <a className="game-resume-btn" href="/resume/Eshan_H_Resume.pdf" target="_blank" rel="noopener noreferrer">OPEN PDF ↗</a>
+                <button type="button" className="game-resume-btn" onClick={() => setResumeExpanded(v => !v)} aria-expanded={resumeExpanded}>{resumeExpanded ? "⤡ COMPACT" : "⤢ FULL VIEW"}</button>
                 <button type="button" className="game-resume-btn" onClick={closeResume}>✕ CLOSE</button>
               </div>
             </div>
@@ -1046,41 +1173,94 @@ export default function PortfolioGame() {
       {/* MOBILE CONTROLS */}
       {started && (
         <div className="mobile-controls">
-          <div className="d-pad" style={{ position: 'relative' }}>
-            {showTutorial && (
-              <div style={{
-                position: 'absolute', top: '-38px', left: '50%', transform: 'translateX(-50%)',
-                whiteSpace: 'nowrap', fontSize: '12px', color: '#00ffff',
-                textShadow: '0 0 8px cyan, 0 0 16px rgba(0,255,255,0.4)',
-                animation: 'pulse-glow 1.5s ease-in-out infinite',
-                pointerEvents: 'none', fontFamily: '"Share Tech Mono", monospace',
-                fontWeight: 'bold', letterSpacing: '1px',
-                background: 'rgba(0,10,20,0.8)', padding: '4px 12px', borderRadius: '12px',
-                border: '1px solid rgba(0,255,255,0.3)',
-              }}>
-                ◀ ▶ MOVE
-              </div>
-            )}
+          <div className="d-pad">
             <button className="d-btn left" onTouchStart={(e) => { e.preventDefault(); handleTouchStart('TouchLeft'); }} onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('TouchLeft'); }} onMouseDown={() => handleTouchStart('TouchLeft')} onMouseUp={() => handleTouchEnd('TouchLeft')} onMouseLeave={() => handleTouchEnd('TouchLeft')}>◀</button>
             <button className="d-btn right" onTouchStart={(e) => { e.preventDefault(); handleTouchStart('TouchRight'); }} onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('TouchRight'); }} onMouseDown={() => handleTouchStart('TouchRight')} onMouseUp={() => handleTouchEnd('TouchRight')} onMouseLeave={() => handleTouchEnd('TouchRight')}>▶</button>
           </div>
-          <div style={{ position: 'relative' }}>
-            {showTutorial && (
-              <div style={{
-                position: 'absolute', top: '-38px', left: '50%', transform: 'translateX(-50%)',
-                whiteSpace: 'nowrap', fontSize: '12px', color: '#39ff14',
-                textShadow: '0 0 8px #39ff14, 0 0 16px rgba(57,255,20,0.4)',
-                animation: 'pulse-glow 1.5s ease-in-out infinite',
-                pointerEvents: 'none', fontFamily: '"Share Tech Mono", monospace',
-                fontWeight: 'bold', letterSpacing: '1px',
-                background: 'rgba(0,10,20,0.8)', padding: '4px 12px', borderRadius: '12px',
-                border: '1px solid rgba(57,255,20,0.3)',
-              }}>
-                ↑ JUMP
-              </div>
-            )}
+          <div>
             <button className="jump-btn" onTouchStart={(e) => { e.preventDefault(); handleTouchStart('TouchJump'); }} onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('TouchJump'); }} onMouseDown={() => handleTouchStart('TouchJump')} onMouseUp={() => handleTouchEnd('TouchJump')} onMouseLeave={() => handleTouchEnd('TouchJump')}>JUMP</button>
           </div>
+        </div>
+      )}
+
+      {/* SPOTLIGHT NAVIGATION TUTORIAL */}
+      {tutStep > 0 && (
+        <div className="game-tut-overlay" role="dialog" aria-modal="true" aria-label="Interactive Portfolio Navigation Guide">
+          <div className="game-tut-backdrop" onClick={finishTutorial} />
+          {tutRect && (
+            <div
+              className="game-tut-spotlight"
+              style={{ left: tutRect.x, top: tutRect.y, width: tutRect.w, height: tutRect.h }}
+            />
+          )}
+          <div className="game-tut-card">
+            <div className="game-tut-head">
+              <span className="game-tut-step">FALCON GUIDE · STEP {tutStep} / 4</span>
+              <button type="button" className="game-tut-skip" onClick={finishTutorial}>✕ SKIP TOUR</button>
+            </div>
+            {tutStep === 1 && (
+              <>
+                <h3 className="game-tut-title">SWIPE OR SCROLL HORIZONTALLY</h3>
+                <p className="game-tut-body">Travel horizontally through Eshan&apos;s Education, Skills, Projects, and Hackathons using <strong>← → Arrow Keys / A D</strong>, <strong>horizontal touch swipe</strong>, or the <strong>◀ ▶ D-Pad</strong>.</p>
+                <div className="game-tut-swipe-demo" aria-hidden="true">
+                  <span>← DRAG / PRESS</span>
+                  <span className="game-tut-thumb" />
+                  <span>SCROLL RIGHT →</span>
+                </div>
+              </>
+            )}
+            {tutStep === 2 && (
+              <>
+                <h3 className="game-tut-title">JUMP, HIT ? BLOCKS &amp; EXPAND CARDS</h3>
+                <p className="game-tut-body">Press <strong>SPACE / ↑</strong>, tap <strong>JUMP</strong>, or <strong>swipe up</strong> to hit floating <strong>?</strong> blocks. Tap portals or press <strong>ENTER</strong> to open cards with <strong>FULL VIEW</strong> expand &amp; close controls.</p>
+              </>
+            )}
+            {tutStep === 3 && (
+              <>
+                <h3 className="game-tut-title">PROJECT ARCADE, RESUME &amp; GUIDE</h3>
+                <p className="game-tut-body">Use the top-right bar anytime to warp into the <strong>9-Project Arcade</strong>, preview &amp; download Eshan&apos;s <strong>2-Page Resume</strong>, toggle <strong>BGM / SFX</strong>, or replay this guide via <strong>?</strong>.</p>
+              </>
+            )}
+            {tutStep === 4 && (
+              <>
+                <h3 className="game-tut-title">MEET ARGUS AI IN THE CORNER</h3>
+                <p className="game-tut-body">Tap the glowing <strong>🤖 ARGUS AI</strong> orb in the bottom-right corner to ask questions about projects, skills, or patents. Get formatted bullet answers, flow diagrams &amp; direct jump shortcuts!</p>
+              </>
+            )}
+            <div className="game-tut-foot">
+              {tutStep > 1 && (
+                <button type="button" className="game-tut-btn sec" onClick={() => setTutStep(s => Math.max(1, s - 1))}>← BACK</button>
+              )}
+              <button
+                type="button"
+                className="game-tut-btn pri"
+                onClick={() => (tutStep < 4 ? setTutStep(s => s + 1) : finishTutorial())}
+              >
+                {tutStep < 4 ? "NEXT →" : "START EXPLORING ✓"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SAME-TAB ANIMATED TRANSITION OVERLAY */}
+      {navTransition && (
+        <div className={`nav-transition-overlay ${navTransition.mode}`} aria-live="polite">
+          {navTransition.mode === "pro" ? (
+            <div className="nav-trans-card pro">
+              <span className="nav-trans-kicker">RECRUITER FAST-TRACK</span>
+              <h2 className="nav-trans-title">ESHAN H · PORTFOLIO</h2>
+              <p className="nav-trans-sub">Loading Executive Overview, Patent 515509-001 &amp; Resume…</p>
+              <div className="nav-trans-bar"><span /></div>
+            </div>
+          ) : (
+            <div className="nav-trans-card arcade">
+              <div className="nav-trans-rings" aria-hidden="true" />
+              <span className="nav-trans-kicker">INSERT COIN · WARPING TO</span>
+              <h2 className="nav-trans-title">PROJECT ARCADE</h2>
+              <p className="nav-trans-sub">9 Interactive CRT Flagship Showcases</p>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -64,24 +64,40 @@
     }
   };
 
-  /* Synth sound: AudioContext is created only after a user gesture (pressing M). */
+  /* Synth sound synced with global Arcade arc_snd preference; AudioContext starts on gesture. */
   var ac = null, muted = true;
+  try { muted = localStorage.getItem('arc_snd') !== '1'; } catch (e) {}
+  function save(on) { try { localStorage.setItem('arc_snd', on ? '1' : '0'); } catch (e) {} }
+  function ensureAc() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    if (ac && ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+  }
+  if (!muted) {
+    ['pointerdown', 'keydown'].forEach(function (ev) {
+      document.addEventListener(ev, function () { if (!muted) ensureAc(); }, { capture: true, once: true, passive: true });
+    });
+  }
   function tone(type, f0, f1, dur, vol, delay) {
-    if (muted || !ac) return; var t = ac.currentTime + (delay || 0), o = ac.createOscillator(), g = ac.createGain();
+    if (muted) return; if (!ac) ensureAc(); if (!ac) return;
+    if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {} }
+    var t = ac.currentTime + (delay || 0), o = ac.createOscillator(), g = ac.createGain();
     o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + 0.02);
   }
   function noise(dur, vol, f) {
-    if (muted || !ac) return; var n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+    if (muted) return; if (!ac) ensureAc(); if (!ac) return;
+    var n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
     for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
     var s = ac.createBufferSource(), g = ac.createGain(), fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f || 2000; s.buffer = b; g.gain.value = vol;
     s.connect(fl); fl.connect(g); g.connect(ac.destination); s.start();
   }
   PF.snd = {
     toggle: function () {
-      if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
-      muted = !muted; if (ac && ac.state === 'suspended') ac.resume(); if (!muted) this.click(); return !muted;
+      muted = !muted; save(!muted);
+      if (!muted) { ensureAc(); this.click(); }
+      return !muted;
     },
+    sync: function () { try { muted = localStorage.getItem('arc_snd') !== '1'; } catch (e) {} return !muted; },
     isOn: function () { return !muted; },
     click: function () { tone('square', 900, 400, 0.05, 0.08); noise(0.03, 0.15, 3500); },
     snap: function () { tone('square', 520, 180, 0.09, 0.1); noise(0.05, 0.2, 2500); },

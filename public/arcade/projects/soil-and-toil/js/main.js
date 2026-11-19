@@ -1,6 +1,11 @@
 (function(){
 var F=window.FACTS,S=window.SC,N=window.SCN,$=function(s){return document.querySelector(s)},$$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
 var cur=0,mode='present',t0=performance.now(),last=t0,W=innerWidth,H=innerHeight,dpr=Math.min(2,window.devicePixelRatio||1),muted=true,actx=null,idleT=0,P={sw:0,hue:.1,dark:.8,moist:.4,w:.45,ph:6.5,scanAt:-1,touched:false,passAt:-1,lang:'EN',tw:'',twAt:0};
+try{muted=localStorage.getItem('arc_snd')!=='1'}catch(e){}
+function saveSnd(on){try{localStorage.setItem('arc_snd',on?'1':'0')}catch(e){}}
+function ensureAc(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(x){actx=null}}if(actx&&actx.state==='suspended'){try{actx.resume()}catch(x){}}}
+if(!muted){['pointerdown','keydown'].forEach(function(ev){document.addEventListener(ev,function(){if(!muted)ensureAc()},{capture:true,once:true,passive:true})})}
+window.addEventListener('pageshow',function(){try{muted=localStorage.getItem('arc_snd')!=='1'}catch(e){}});
 var strip=$('#strip'),fx=$('#fx'),fc=fx.getContext('2d'),mit=$('#mitti'),mpos=[[56,20,40],[14,22,24],[90,24,18],[50,22,16],[90,24,20],[90,24,20],[88,62,16]];
 var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
 if(/from=hub/.test(location.search))document.body.classList.add('hub');
@@ -21,7 +26,7 @@ function cam(){strip.style.transform='translate3d('+(-cur*W)+'px,0,0)';$$('.bg')
  var m=mpos[cur];mit.style.setProperty('--x',m[0]+'vw');mit.style.setProperty('--y',m[1]+'vh');mit.style.setProperty('--s',m[2]+'vh');$$('#dots button').forEach(function(b,i){b.className=i==cur?'on':''})}
 function react(l,say){var el=mit;el.classList.remove('sad','happy','bounce');void el.offsetWidth;el.classList.add('bounce');if(l<.35)el.classList.add('sad');else if(l>.6)el.classList.add('happy');
  var b=$('#mbub');b.textContent=say||(l<.35?'Low nitrogen':l>.6?'Balanced':'Hmm');el.classList.add('say');clearTimeout(react.t);react.t=setTimeout(function(){el.classList.remove('say','bounce')},1600);pluck(l>.6?660:l<.35?220:440)}
-function pluck(f){if(muted||!actx)return;var o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.5);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.5)}
+function pluck(f){if(muted)return;ensureAc();if(!actx)return;var o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.12,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+.5);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+.5)}
 function go(i){i=Math.max(0,Math.min(S.length-1,i));var changed=i!=cur;cur=i;if(mode=='explore')cur=1;enter(changed);history.replaceState(null,'','#scene-'+(cur+1));cam()}
 function enter(){t0=performance.now();if(cur==5)typeIt();if(cur==4){P.touched=false}if(cur==0||cur==6)react(cur==0?.8:.5,cur==0?'Hello!':'Honest!')}
 /* typewriter */
@@ -59,7 +64,7 @@ document.addEventListener('keydown',function(e){var k=e.key;if(e.target.tagName=
  if(k=='ArrowRight'||k==' '||k=='PageDown'){e.preventDefault();go(cur+1)}else if(k=='ArrowLeft'||k=='PageUp'){e.preventDefault();go(cur-1)}
  else if(k=='Enter'&&e.target.tagName!='BUTTON'){enter()}else if(k=='p'||k=='P')setMode(mode=='present'?'explore':'present');
  else if(k=='r'||k=='R'){$('#ovT').classList.remove('on');ov('#ovR')}else if(k=='t'||k=='T'){$('#ovT').innerHTML='<p>'+F.scenes[cur].note+'</p>';$('#ovR').classList.remove('on');ov('#ovT')}
- else if(k=='m'||k=='M'){muted=!muted;if(!actx&&!muted){try{actx=new (window.AudioContext||window.webkitAudioContext)()}catch(x){}}if(!muted)pluck(523)}
+ else if(k=='m'||k=='M'){muted=!muted;saveSnd(!muted);if(!muted){ensureAc();pluck(523)}window.dispatchEvent(new CustomEvent('arcade:sound-sync',{detail:{on:!muted}}))}
  else if(k=='f'||k=='F'){if(document.fullscreenElement)document.exitFullscreen();else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen()}
  else if(k=='Escape'){if(anyOv())$$('.ov').forEach(function(x){x.classList.remove('on')});else location.href=$('#arcade').href}});
 $('#stage').addEventListener('click',function(e){if(mode!='present'||anyOv())return;if(e.target.closest('button,input,a,.obj,.tip,.tab'))return;if(e.clientX>W*.7)go(cur+1)});

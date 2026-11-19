@@ -15,7 +15,10 @@
     if (mode === 'explore') { setMode('present'); return; }
     location.href = $('#arcade').getAttribute('href');
   }
-  function sound() { var on = K.audio.toggle(); $('#btnM').classList.toggle('on', !!on); $('#btnM').setAttribute('aria-pressed', !!on); }
+  function syncSoundBtn() { var on = !!K.audio.on; $('#btnM').classList.toggle('on', on); $('#btnM').setAttribute('aria-pressed', on); }
+  function sound() { var on = K.audio.toggle(); syncSoundBtn(); }
+  syncSoundBtn();
+  window.addEventListener('pageshow', function () { try { K.audio.on = localStorage.getItem('arc_snd') === '1'; } catch (e) {} syncSoundBtn(); });
   function full() { var d = document; if (!d.fullscreenElement && !d.webkitFullscreenElement) { (app.requestFullscreen || app.webkitRequestFullscreen || function () { }).call(app); } else { (d.exitFullscreen || d.webkitExitFullscreen).call(d); } }
   function R() { if (K.reality.open && $('#reality').classList.contains('embedded')) return; K.reality.toggle(); }
 

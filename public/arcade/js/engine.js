@@ -46,6 +46,7 @@
       if (k >= 0) { S.hx = S.px = items[k].x; S.cam = S.hx; S.hy = -110; S.hs = 0.34; S.ha = 0; S.state = 'RETURNING'; S.seq = { t: 0, k: k, c: items[k].c, back: 1 }; A.fx.flood(items[k].c[0], 1, 1); setTimeout(function () { A.fx.flood(items[k].c[0], 0, 600); }, 30); if (S.rm) finishReturn(); }
       else { S.hx = S.px = 60; S.cam = 200; S.hv = 0; A.engine.walkTo(0); S.target = { x: 260, k: -1, then: false }; }
       A.ui.hint(true); A.audio.loop(true); A.ui.setActive(-1);
+      if (!from && A.ui.maybeTutorial) setTimeout(function () { A.ui.maybeTutorial(); }, S.rm ? 50 : 450);
     }
   };
   function finishReturn() { if (S.seq) W.setOpen(S.seq.k, false); S.seq = null; S.state = 'WORLD'; S.hy = 0; S.hs = 1; S.ha = 1; S.hsq = 1; A.ui.toast(D.boot.toast, 3200); }
@@ -157,7 +158,7 @@
   var NAMES = { saathi: 0, argus: 1, soil: 2, axiom: 3, personaforge: 4, kavach: 5, prorover: 6, usb: 7, bridge: 7, verifarm: 8 };
   function onKey(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return; var k = e.key, kl = k.length === 1 ? k.toLowerCase() : k; touch(); S.keys.run = e.shiftKey ? 1 : 0;
-    if (kl === 'm') { A.audio.setMuted(!A.audio.isMuted()); return; }
+    if (kl === 'm') { A.audio.setMuted(!A.audio.isMuted()); A.store('arc_snd', A.audio.isMuted() ? '0' : '1'); return; }
     if (kl === 'f') { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (x) {} return; }
     if (k === 'Escape') { if (A.ui.closeAll()) { e.preventDefault(); return; } if (S.tour !== null) A.engine.tour(false); S.target = null; return; }
     if (S.overlay) { if (A.ui.key(e)) e.preventDefault(); return; }
@@ -204,6 +205,24 @@
       var r = items[k].el.getBoundingClientRect(); S.tt.x = clamp((e.clientX - r.left - r.width / 2) / (r.width / 2), -1, 1); S.tt.y = clamp((e.clientY - r.top - r.height / 2) / (r.height / 2), -1, 1);
     }, { passive: true });
     window.addEventListener('pointerdown', function () { touch(); }, { passive: true });
+    /* Horizontal swipe/drag on touch screens moves along the Arcade hallway */
+    var tsx = 0, tsy = 0, swiping = false;
+    screenEl.addEventListener('touchstart', function (e) {
+      if (S.state !== 'WORLD' || S.overlay || e.touches.length !== 1) return;
+      tsx = e.touches[0].clientX; tsy = e.touches[0].clientY; swiping = true;
+    }, { passive: true });
+    screenEl.addEventListener('touchend', function (e) {
+      if (!swiping || S.state !== 'WORLD' || S.overlay) { swiping = false; return; }
+      swiping = false;
+      var t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      var dx = t.clientX - tsx, dy = t.clientY - tsy;
+      if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+        S.tour = null; A.ui.tourChip(false);
+        var step = Math.max(260, Math.min(700, Math.abs(dx) * 3.2));
+        S.target = { x: clamp(S.hx + (dx < 0 ? step : -step), 80, W.LEN - 80), k: -1, then: false };
+      }
+    }, { passive: true });
   }
 
   /* ---------- boot ---------- */
