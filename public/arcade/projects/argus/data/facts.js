@@ -1,0 +1,57 @@
+/* ALL on-screen text and numbers live here. Edit freely. Source of truth: Truth Sheet. */
+window.FACTS = {
+  SRC: 'argus_metrics.md field run',
+  nums: { callsArgus: 971, callsNaive: 466523, fewer: '99.79%', memArgus: 1077.8, memNaive: 5650,
+    suppressed: [2, 4], eventsRaw: 73, eventsStored: 54, transitions: 31, searchTime: '10 min 58 s',
+    yoloMs: 19.9, weaponFDR: '38.87%', weaponPrec: '61.13%', weaponRec: '63.99%' },
+  scenes: [
+    { head: 'THE PROBLEM', cap: 'Every frame to the cloud does not fit.', take: '8 GB laptop, six cameras',
+      bub: 'Not every frame deserves a phone call.', terms: ['429', 'edge computing'],
+      note: 'If every frame goes to the cloud, you pay in cost, rate limits and memory.' },
+    { head: 'THE SENTRY', cap: 'Cheap eyes first.', take: 'Four triggers wake the cloud',
+      bub: 'Cheap eyes first. Expensive eyes later.', terms: ['YOLO', 'BOLO', 'p50'],
+      note: 'A tiny local model watches. The cloud is only called on a trigger.' },
+    { head: 'THREE SLOTS', cap: 'Least recently used leaves.', take: 'Models load on demand',
+      bub: 'Three chairs. Somebody always stands.', terms: ['VLM', 'LRU', 'hysteresis'],
+      note: 'Only three models fit. The least recently used leaves, after a short grace period so it does not flicker.' },
+    { head: 'SECOND OPINION', cap: 'Every alert gets a second look.', take: 'Stage 2 rejects false alarms',
+      bub: 'Trust, then verify. Twice.', terms: ['mAP@50', 'false discovery rate'],
+      note: 'The weapon model alone is wrong about 39% of its alerts. So every alert gets a second look.' },
+    { head: 'THE HUNT', cap: 'Face, then clothes, then plate.', take: 'Cross-camera search',
+      bub: 'Everybody leaves a trail.', terms: ['ArcFace', 'cosine similarity', 'Levenshtein distance'],
+      note: 'Face first. Clothing fingerprint if the face is hidden. Plates with a one character tolerance.' },
+    { head: 'THE NUMBERS', cap: '971 calls, not 466,523.', take: 'Field run, 3 phone cameras',
+      bub: 'Numbers from the field, not the lab.', terms: ['p50/p95', 'SQLite WAL'],
+      note: 'These come from a two hour field run with three phone cameras.' },
+    { head: 'CASE FILE', cap: 'Registered design, published.', take: 'Design 515509-001',
+      bub: 'Here is what I would fix.', terms: ['WebSocket', 'RTSP'],
+      note: 'The case file closes with the design registration. Say the rest in your own words.' }
+  ],
+  reality: {
+    'REAL': ['FastAPI runtime, camera workers, key router', 'Search engine and Next.js dashboard', '4 custom-trained weights',
+      'SQLite persistence and offline mock mode', 'Field-run metrics, measured'],
+    'PARTIAL': ['Pothole and waste use generic COCO yolov8n', '7 adapters are simplified rewrites', 'Baggage unattended counter never incremented']
+  },
+  registration: 'Indian Design Registration 515509-001, accepted and published',
+  models: ['WEAPON', 'FIRE + SMOKE', 'SHOPLIFTING', 'VANDALISM'],
+  triggers: ['COUNT', 'SCENE', '20 S', 'SEARCH'],
+  tips: {
+    '429': 'HTTP 429: the server says slow down, too many requests.',
+    'edge computing': 'Doing the work on the local machine instead of the cloud.',
+    'YOLO': 'You Only Look Once: a fast object detector. YOLOv8n is its small version.',
+    'BOLO': 'Be On the Look-Out: an active search that needs a camera.',
+    'p50': 'Median time: half of the calls are faster than this.',
+    'VLM': 'Vision-Language Model: an AI that reads images and answers in text.',
+    'LRU': 'Least Recently Used: the model idle the longest is evicted first.',
+    'hysteresis': 'A grace period so a model is not dropped after one miss.',
+    'mAP@50': 'Mean Average Precision at overlap 0.5: overall detector accuracy score.',
+    'false discovery rate': 'Share of alerts that turn out to be wrong.',
+    'ArcFace': 'A face model that turns a face into 512 numbers.',
+    'cosine similarity': 'How alike two number lists are, from 0 to 1.',
+    'Levenshtein distance': 'Count of single character edits between two strings.',
+    'p50/p95': 'Median and slow-tail response times.',
+    'SQLite WAL': 'Small database file with write-ahead logging for safe writes.',
+    'WebSocket': 'A live two-way connection between browser and server.',
+    'RTSP': 'Real Time Streaming Protocol, used by IP cameras.'
+  }
+};

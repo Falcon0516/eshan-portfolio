@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>SAATHI: the operator's switchboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/explain.css">
+</head>
+<body>
+<div id="stage"><div id="plate"></div><div id="track"></div>
+  <div id="mascot" class="mascot" style="position:fixed;right:5vw;bottom:9vh;z-index:5"><img src="assets/saathi_mascot.png" alt="Saathi, a telephone-headed operator" onerror="this.style.display='none'"><div id="bubble" class="bubble" style="right:60%;top:-30px"></div></div>
+</div>
+<div id="vig"></div>
+<svg id="grain" aria-hidden="true"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+<canvas id="fx" aria-hidden="true"></canvas>
+<a id="back" href="../../index.html?from=saathi" aria-label="Back to arcade">◀ ARCADE</a>
+<div class="badge">SIMULATION · illustrative</div>
+<div id="dots" role="tablist" aria-label="Scenes"></div>
+<button id="mode" aria-label="Switch between Present and Explore mode">EXPLORE (P)</button>
+<div id="hint">← → move   P mode   R reality   T notes   M sound   F full</div>
+<div id="notes" role="note"></div>
+<div id="real" role="dialog" aria-label="Reality check"></div>
+<div id="explore"></div>
+<div id="tip" role="tooltip"></div>
+<div id="entry" style="position:fixed;inset:0;background:#000;z-index:40;pointer-events:none;opacity:0;transition:opacity .7s"></div>
+<script src="data/facts.js"></script>
+<script src="js/sim/flow.js"></script>
+<script src="js/scenes/scenes.js"></script>
+<script src="js/main.js"></script>
+<script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body></html>

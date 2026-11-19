@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXIOM: The Vault Gauntlet</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/explain.css">
+</head><body>
+<a id="arcade" href="../../index.html?from=axiom" aria-label="Back to arcade">◀ ARCADE</a>
+<div id="view"><div id="stage"><div class="ring" id="ring"></div><canvas id="cv" width="1600" height="900"></canvas></div></div>
+<div id="bouncer" role="img" aria-label="Bouncer Bot, a doorman robot with a clipboard"></div>
+<svg id="grain" width="100%" height="100%"><filter id="n"><feTurbulence baseFrequency=".8" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg><div id="scan"></div>
+<div id="ledger" aria-label="Ledger ribbon, local simulation"></div><div id="badge">SIMULATION · illustrative</div>
+<div id="bar"><button id="bP" aria-label="Toggle Present and Explore mode">P EXPLORE</button><button id="bR" aria-label="Reality check">R</button><button id="bT" aria-label="Presenter notes">T</button><button id="bM" aria-label="Sound">M</button><button id="bF" aria-label="Fullscreen">F</button></div>
+<div id="rd"></div>
+<div id="copy"><small id="n"></small><h1 id="h"></h1><p id="c"></p><em id="t"></em></div>
+<div id="notes"></div><div id="dots"></div>
+<div id="hint">← → scenes · P explore · R reality · T notes · M sound · F full</div>
+<div id="over"><h2>Reality check</h2><div class="cols"><div class="real"><h3>REAL</h3><ul id="lr"></ul></div><div class="part"><h3>PARTIAL</h3><ul id="lp"></ul></div></div><div id="plates"></div></div>
+<div id="explore"><div><div id="presets"></div><div id="knob"><label for="lim">Burst limit: <span id="limv"></span> calls / 10 s<br><small>SIMULATION: illustrative rule</small></label><input id="lim" type="range" min="5" max="60" value="50"></div></div><div><div id="gates"></div></div><div id="res"></div></div>
+<div id="tip" role="tooltip"></div>
+<script src="data/facts.js"></script><script src="js/sim/flow.js"></script><script src="js/main.js"></script><script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body></html>

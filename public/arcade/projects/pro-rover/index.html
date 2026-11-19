@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PRO-ROVER · Mars Console</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/explain.css">
+</head>
+<body>
+<div id="stage" class="mode-present">
+  <div id="world">
+    <div id="fallback" aria-hidden="true"></div>
+    <canvas id="cvA" class="win" aria-label="Field map, simulation"></canvas>
+    <canvas id="cvB" class="win" aria-label="Error plot and link, simulation"></canvas>
+    <canvas id="cvC" class="win" aria-label="Sonar and safety ladder, simulation"></canvas>
+    <div class="crt" id="crtA"></div><div class="crt" id="crtB"></div><div class="crt" id="crtC"></div>
+    <img id="frame" src="assets/console_frame.png" alt="" draggable="false">
+    <button id="estop" class="obj" aria-label="Emergency stop"><span>E-STOP</span></button>
+  </div>
+  <div id="vignette"></div>
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div id="sun" aria-hidden="true"><img id="sunimg" src="assets/sunburst.png" alt=""><div id="count">3</div></div>
+  <div id="wipe" aria-hidden="true"></div>
+</div>
+
+<header id="chrome-top">
+  <a id="back" class="obj" href="../../index.html?from=pro-rover" aria-label="Back to arcade">◀ ARCADE</a>
+  <div id="toggles">
+    <button id="modebtn" class="obj" aria-label="Toggle present or explore mode">PRESENT</button>
+    <button id="soundbtn" class="obj" aria-label="Toggle sound">SND OFF</button>
+    <button id="notebtn" class="obj" aria-label="Presenter notes">NOTES</button>
+    <button id="realbtn" class="obj" aria-label="Reality check">REALITY</button>
+  </div>
+</header>
+
+<section id="copy" aria-live="polite">
+  <h1 id="head"></h1><p id="cap"></p><p id="take"></p>
+  <div id="labels"></div>
+</section>
+<div id="simbadge">SIMULATION · illustrative</div>
+
+<div id="rovy"><div id="bubble"></div><img id="rovyimg" src="assets/rovy_rover.png" alt="Rovy, the guide rover"><svg id="rovyfb" viewBox="0 0 100 80" aria-hidden="true"><rect x="14" y="30" width="62" height="28" rx="8" fill="#C1440E"/><rect x="58" y="10" width="14" height="30" rx="5" fill="#C1440E"/><circle cx="65" cy="18" r="7" fill="#2BD9C5"/><circle cx="24" cy="62" r="9" fill="#1A0F0A"/><circle cx="46" cy="62" r="9" fill="#1A0F0A"/><circle cx="68" cy="62" r="9" fill="#1A0F0A"/></svg></div>
+
+<div id="rack" class="obj-zone" aria-label="Controls">
+  <div id="dials"></div>
+  <div id="switches"></div>
+</div>
+
+<div id="explore-tabs" role="tablist" aria-label="Explore simulations"></div>
+
+<div id="reality" class="hidden" role="dialog" aria-label="Reality check"></div>
+<div id="notes" class="hidden" role="note"></div>
+<div id="tip" role="tooltip"></div>
+<div id="hint"></div>
+<nav id="dots" aria-label="Scenes"></nav>
+<div id="clock" aria-hidden="true"><i id="rec"></i><span id="clocktxt">T+00:00</span></div>
+
+<script src="data/facts.js"></script>
+<script src="js/sim/flow.js"></script>
+<script src="js/sim/rover.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/draw.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/scenes/scenes.js"></script>
+<script src="js/main.js"></script>
+<script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body>
+</html>

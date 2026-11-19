@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VERIFARM · The Isometric Mandi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/explain.css">
+</head>
+<body class="mode-present">
+<div id="viewport">
+  <div id="stage" aria-hidden="true">
+    <div id="plate"></div>
+    <svg id="routes" width="2560" height="1440" viewBox="0 0 2560 1440"></svg>
+    <div id="props"></div>
+  </div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="tint"></div><div id="grain"></div><div id="vignette"></div>
+  <div id="leftscrim"></div>
+
+  <a id="arcade" href="../../index.html?from=verifarm" aria-label="Back to the arcade">&#9664; <span data-ui="arcade">ARCADE</span></a>
+  <div id="topbar">
+    <button id="modebtn" class="chip" aria-label="Toggle present and explore mode"></button>
+    <div id="langs" role="group" aria-label="Language">
+      <button class="chip lang on" data-l="en">EN</button><button class="chip lang" data-l="hi">हि</button><button class="chip lang" data-l="kn">ಕ</button>
+    </div>
+    <button id="rbtn" class="chip" aria-label="Reality check">R</button>
+    <button id="mbtn" class="chip" aria-label="Sound">M</button>
+    <button id="fbtn" class="chip" aria-label="Fullscreen">F</button>
+  </div>
+
+  <section id="copy" aria-live="polite">
+    <h1 id="head"></h1>
+    <p id="cap"></p>
+    <p id="take"></p>
+  </section>
+  <div id="badge">SIMULATION · illustrative</div>
+  <div id="widget"></div>
+  <div id="explore"></div>
+  <div id="stampwrap"><div id="stamp"></div></div>
+
+  <div id="ribbon" aria-label="Local hash chain simulation">
+    <div id="ribbon-title"><b>CHAIN</b><i>local simulation</i></div>
+    <div id="blocks"></div>
+    <div id="ribbon-hint"></div>
+  </div>
+  <div id="rangoli"></div>
+
+  <div id="raja"><div id="bubble"></div><div id="raja-img"></div></div>
+  <nav id="dots" aria-label="Scenes"></nav>
+  <div id="hint"></div>
+  <div id="notes" role="note"></div>
+  <div id="reality" role="dialog" aria-label="Reality check"></div>
+  <div id="tip" role="tooltip"></div>
+  <div id="entry"><div id="awning"></div></div>
+</div>
+<script src="data/facts.js"></script>
+<script src="js/sha256.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/sim/flow.js"></script>
+<script src="js/main.js"></script>
+<script src="js/scenes/scenes.js"></script>
+<script src="js/sim/explore.js"></script>
+<script>VFBoot();</script>
+<script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body>
+</html>

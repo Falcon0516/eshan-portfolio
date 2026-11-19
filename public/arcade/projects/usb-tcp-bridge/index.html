@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>USB-TCP BRIDGE</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/explain.css">
+</head>
+<body data-scene="1">
+<div id="stage" aria-label="Blueprint stage">
+  <div id="bg" aria-hidden="true"></div>
+  <div id="cam"></div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="vig" aria-hidden="true"></div><div id="fold" aria-hidden="true"></div><div id="tube" aria-hidden="true"></div>
+</div>
+
+<a id="back" class="chrome btn" href="../../index.html?from=usb-tcp-bridge">&#9664; ARCADE</a>
+<div id="modes" class="chrome" role="group" aria-label="Mode">
+  <button id="mPresent" class="btn on" type="button" aria-pressed="true">PRESENT</button>
+  <button id="mExplore" class="btn" type="button" aria-pressed="false">EXPLORE</button>
+</div>
+<div id="tools" class="chrome">
+  <button id="mReal" class="btn sm" type="button" aria-label="Reality check (R)">R</button>
+  <button id="mNotes" class="btn sm" type="button" aria-label="Presenter notes (T)">T</button>
+  <button id="mSound" class="btn sm" type="button" aria-label="Sound (M)" aria-pressed="false">M</button>
+  <button id="mFull" class="btn sm" type="button" aria-label="Fullscreen (F)">F</button>
+</div>
+<div id="badge" role="note"></div>
+
+<main id="hud" class="panel" aria-live="polite">
+  <h1 id="hHead"></h1><p id="hCap"></p><p id="hTake"></p>
+</main>
+
+<section id="labs" class="panel" aria-label="Explore labs">
+  <div id="labPanel"></div><div id="labTabs" role="tablist"></div>
+</section>
+
+<div id="reality" class="panel" role="dialog" aria-labelledby="rTitle"></div>
+<div id="notes" role="note"></div>
+<div id="hint" class="chrome" aria-hidden="true"></div>
+<div id="dots" class="chrome" role="group" aria-label="Scenes"></div>
+<div id="tb" aria-hidden="true"><b id="tbName"></b><span id="tbSheet"></span><span id="tbBy"></span></div>
+<div id="tip" role="tooltip"></div>
+<noscript><p style="padding:2rem">This presentation needs JavaScript.</p></noscript>
+
+<script src="data/facts.js"></script>
+<script src="js/sim/flow.js"></script>
+<script src="js/sim/stage.js"></script>
+<script src="js/sim/bridge.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/scenes/scenes.js"></script>
+<script src="js/sim/labs.js"></script>
+<script src="js/main.js"></script>
+<script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body>
+</html>

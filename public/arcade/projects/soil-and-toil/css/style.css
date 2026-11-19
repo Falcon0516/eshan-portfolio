@@ -1,0 +1,79 @@
+:root{--soil:#3B2A1E;--clay:#7A5230;--leaf:#5DBB63;--sprout:#A8E063;--sun:#FFD9A0;--sky:#CFEFFF;--paper:#FFF6E5;--ink:#2B2118;--ease:cubic-bezier(.2,.8,.2,1);--d:'Georgia',serif;--l:'Trebuchet MS',sans-serif;--hw:'Bradley Hand','Segoe Script',cursive}
+*{box-sizing:border-box;margin:0}html,body{height:100%;overflow:hidden;background:var(--soil);color:var(--paper);font-family:var(--l)}
+body.idle{cursor:none}body.idle #dots,body.idle #modeBtn{opacity:0}
+#stage{position:fixed;inset:0;overflow:hidden}
+.bg{position:absolute;inset:-25% -40%;background:url(../assets/farm_diorama_bg.webp) center/cover,linear-gradient(var(--sky),var(--sun) 45%,var(--leaf) 46%,var(--soil));transition:transform 1.2s var(--ease);will-change:transform}
+.far{-webkit-mask-image:linear-gradient(#000 0 40%,transparent 58%);mask-image:linear-gradient(#000 0 40%,transparent 58%)}
+.mid{-webkit-mask-image:linear-gradient(transparent 28%,#000 44%,#000 58%,transparent 72%);mask-image:linear-gradient(transparent 28%,#000 44%,#000 58%,transparent 72%)}
+.near{-webkit-mask-image:linear-gradient(transparent 52%,#000 66%);mask-image:linear-gradient(transparent 52%,#000 66%)}
+#sun{position:absolute;left:62%;top:30%;width:18vmin;height:18vmin;border-radius:50%;background:radial-gradient(circle,#fff6c8,#FFD9A0 55%,transparent 72%);mix-blend-mode:screen;transform:translateY(40vh);animation:rise 2.4s var(--ease) forwards}
+body.hub #sun{animation-duration:.7s}
+@keyframes rise{to{transform:translateY(0)}}
+#cloud{position:absolute;inset:0;background:radial-gradient(40vw 12vh at 20% 30%,rgba(43,33,24,.18),transparent);animation:drift 40s linear infinite alternate}
+@keyframes drift{to{transform:translateX(50vw)}}
+#table{position:absolute;left:0;right:0;bottom:0;height:34vh;background:linear-gradient(rgba(43,33,24,.55),transparent 18%),repeating-linear-gradient(90deg,rgba(0,0,0,.1) 0 2px,transparent 2px 120px),repeating-linear-gradient(0deg,#7A5230 0 44px,#69441f 44px 47px);box-shadow:0 -14px 30px rgba(43,33,24,.5);transition:background-position 1.2s var(--ease)}
+#strip{position:absolute;inset:0;transition:transform 1.15s var(--ease)}
+.sc{position:absolute;top:0;height:100%;width:100vw}
+.txt{position:absolute;left:3.5vw;bottom:5vh;max-width:36vw;padding:2.2vh 2.4vw 2.2vh 1.4vw;background:linear-gradient(90deg,rgba(43,33,24,.9) 70%,transparent);z-index:5;transition:opacity .4s}
+.txt.r{left:auto;right:3.5vw;background:linear-gradient(270deg,rgba(43,33,24,.9) 70%,transparent);padding:2.2vh 1.4vw 2.2vh 2.4vw;text-align:right}
+h2{font:italic 700 clamp(44px,6.4vw,110px)/.9 var(--d);letter-spacing:-.04em;text-transform:uppercase;color:var(--paper)}
+.cap{font-size:clamp(24px,1.7vw,34px);line-height:1.2;margin-top:1.4vh}
+.take{font:clamp(24px,1.8vw,34px) var(--hw);color:var(--sprout);margin-top:.8vh}
+.lab{font-size:14px;color:var(--paper)}
+.sim{position:absolute;font-size:14px;padding:5px 9px;background:var(--ink);color:var(--sun);border:1px dashed var(--sun);transform:rotate(-1.5deg);z-index:6}
+.tip{border-bottom:2px dotted var(--sprout);cursor:help;position:relative}
+.tip::after{content:attr(data-tip);position:absolute;left:0;bottom:130%;width:max-content;max-width:280px;padding:8px 10px;background:var(--paper);color:var(--ink);font:14px/1.3 var(--l);text-align:left;opacity:0;pointer-events:none;transform:translateY(4px);transition:.2s;z-index:50;box-shadow:3px 3px 0 var(--ink)}
+.tip:hover::after,.tip:focus::after{opacity:1;transform:none}
+:focus-visible{outline:3px solid var(--sprout);outline-offset:3px}
+.btn{position:fixed;top:12px;min-width:44px;min-height:44px;padding:10px 14px;background:var(--paper);color:var(--ink);font:700 14px var(--l);border:0;border-radius:4px 10px 4px 10px;box-shadow:3px 3px 0 var(--ink);text-decoration:none;cursor:pointer;z-index:40;transition:opacity .4s,transform .15s}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+#arcade{left:12px}#modeBtn{right:12px}
+#dots{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:40;transition:opacity .4s}
+#dots button{width:44px;height:44px;background:none;border:0;cursor:pointer;position:relative}
+#dots button::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px;border-radius:50%;background:var(--paper);opacity:.5;transition:.3s var(--ease)}
+#dots button.on::after{opacity:1;background:var(--sprout);transform:scale(1.5)}
+#hint{position:fixed;left:50%;top:14px;transform:translateX(-50%);font-size:14px;background:var(--ink);padding:8px 12px;border-radius:4px;z-index:40;animation:hint 6s forwards;pointer-events:none}
+@keyframes hint{0%,85%{opacity:1}100%{opacity:0}}
+#grain{position:fixed;inset:0;pointer-events:none;opacity:.12;mix-blend-mode:multiply;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");z-index:30}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(43,33,24,.55));z-index:31}
+#fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+canvas.cv{position:absolute;pointer-events:none}
+#mitti{position:absolute;z-index:8;width:var(--s,26vh);height:var(--s,26vh);left:var(--x,6vw);bottom:var(--y,22vh);transition:left 1s cubic-bezier(.3,1.4,.5,1),bottom 1s cubic-bezier(.3,1.4,.5,1),width 1s var(--ease),height 1s var(--ease),filter .5s;cursor:pointer;animation:breathe 3.2s ease-in-out infinite;transform-origin:50% 100%}
+#mitti i{position:absolute;inset:0;background:url(../assets/mitti_mascot.png) center/contain no-repeat,radial-gradient(circle at 50% 60%,#3B2A1E 0 38%,transparent 40%)}
+#mitti.sad{filter:saturate(.5) brightness(.8)}#mitti.happy{filter:saturate(1.2) brightness(1.1)}
+#mitti.bounce{animation:squash .6s}
+@keyframes breathe{50%{transform:scale(1.03,.98)}}
+@keyframes squash{20%{transform:scale(1.2,.75)}55%{transform:scale(.9,1.2)}}
+#mbub{position:absolute;left:60%;top:-4%;font:700 16px var(--hw);background:var(--paper);color:var(--ink);padding:4px 9px;border-radius:10px 10px 10px 0;opacity:0;transition:.3s;white-space:nowrap}
+#mitti.say #mbub{opacity:1}
+.ov{position:fixed;inset:0;z-index:60;background:rgba(43,33,24,.94);display:none;padding:9vh 6vw;overflow:auto}.ov.on{display:block}
+.cols{display:grid;grid-template-columns:repeat(2,1fr);gap:3vw}
+.col{background:var(--paper);color:var(--ink);padding:2.4vh 1.6vw;box-shadow:6px 6px 0 var(--clay)}.col:nth-child(1){transform:rotate(-.8deg)}.col:nth-child(2){transform:translateY(2vh) rotate(.6deg)}.col:nth-child(3){transform:rotate(-.4deg)}
+.col h3{font:italic 700 clamp(26px,2.6vw,44px) var(--d);margin-bottom:1.4vh}.col li{list-style:none;font-size:clamp(18px,1.4vw,26px);padding:.8vh 0;border-bottom:1px dashed var(--clay)}
+.col.g h3{color:#2f7d36}.col.y h3{color:#8a5a0f}.col.r h3{color:#a8321f}
+.nb{position:absolute;left:6vw;right:6vw;top:9vh;bottom:11vh;background:var(--paper) repeating-linear-gradient(transparent 0 3.6vh,rgba(122,82,48,.25) 3.6vh 3.7vh);color:var(--ink);padding:3vh 3vw;box-shadow:10px 10px 0 rgba(43,33,24,.5);transform:rotate(-.6deg);overflow:hidden}
+.nb .cols{margin-top:1vh}.nb .hand{font:clamp(26px,2.4vw,40px) var(--hw);color:#a8321f;margin-top:3vh;transform:rotate(-2deg)}
+.nb h2{color:var(--ink);font-size:clamp(34px,3.6vw,64px)}
+#ovT p{font:clamp(24px,2vw,36px)/1.3 var(--d)}
+#bench{position:fixed;right:1.2vw;top:9vh;bottom:10vh;width:27vw;min-width:300px;overflow:auto;background:var(--paper);color:var(--ink);padding:14px;z-index:20;display:none;box-shadow:6px 6px 0 var(--clay);font-size:14px}
+body.explore #bench{display:block}body.explore .txt{opacity:0;pointer-events:none}body.explore #dots{display:none}
+#bench h4{font:italic 700 20px var(--d);margin:10px 0 6px}#bench .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}
+#bench .sw{width:44px;height:44px;border:3px solid var(--ink);border-radius:50% 40% 50% 40%;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}#bench .sw.on{outline:3px solid var(--leaf)}
+#bench label{display:flex;justify-content:space-between;gap:8px;width:100%;align-items:center}
+input[type=range]{-webkit-appearance:none;appearance:none;height:30px;background:linear-gradient(var(--clay),var(--clay)) center/100% 6px no-repeat;cursor:grab}
+#bench input[type=range]{width:62%}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:32px;background:var(--leaf);border:3px solid var(--ink);border-radius:6px 6px 14px 14px;box-shadow:2px 2px 0 var(--ink)}
+input[type=range]::-moz-range-thumb{width:20px;height:28px;background:var(--leaf);border:3px solid var(--ink);border-radius:6px 6px 14px 14px}
+#bench button.go{min-height:44px;padding:0 16px;background:var(--leaf);color:var(--ink);border:3px solid var(--ink);font:700 15px var(--l);box-shadow:3px 3px 0 var(--ink);cursor:pointer}#bench button.go:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+#bench .out{font:700 15px ui-monospace,Menlo,monospace;line-height:1.6;background:var(--soil);color:var(--sun);padding:8px 10px;margin-top:6px}
+#bench canvas{width:100%;height:90px;background:var(--soil);margin-top:6px}
+#bench .bar{height:12px;background:var(--leaf);margin:3px 0;transition:width .3s var(--ease)}
+.pl{background:url(../assets/seedling_set.png) no-repeat;transition:.5s var(--ease);transform-origin:50% 100%;position:absolute}
+.mach{position:absolute;background:var(--clay);color:var(--paper);border:4px solid var(--ink);padding:10px 14px;font:700 22px var(--l);box-shadow:5px 5px 0 var(--ink);animation:hum 2s ease-in-out infinite;z-index:3}
+@keyframes hum{50%{transform:translateY(-3px) rotate(.4deg)}}
+.tab{min-width:44px;min-height:44px;margin-right:6px;background:var(--paper);color:var(--ink);border:3px solid var(--ink);font:700 16px var(--l);cursor:pointer}.tab.on{background:var(--sprout)}
+.tw{position:absolute;background:var(--paper);color:var(--ink);padding:2.4vh 1.8vw;width:42vw;min-height:15vh;font:clamp(24px,1.8vw,32px)/1.35 "Kohinoor Devanagari","Noto Sans Devanagari","Kannada Sangam MN","Noto Sans Kannada","Nirmala UI",var(--d);box-shadow:6px 6px 0 var(--ink);transform:rotate(-1deg);z-index:5}
+.knob{position:absolute;width:26vw;z-index:6}
+.pulse{animation:pls 1.6s ease-in-out infinite}@keyframes pls{50%{box-shadow:0 0 0 10px rgba(168,224,99,.4)}}
+@media(max-width:700px){.txt,.txt.r{max-width:92vw;left:2vw;right:auto;text-align:left;bottom:9vh}h2{font-size:42px}#bench{left:2vw;right:2vw;width:auto;top:auto;height:44vh;bottom:8vh}.cols{grid-template-columns:1fr}.tw{width:92vw}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.15s!important}}

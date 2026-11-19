@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Eshan H · Project Arcade</title>
+<link rel="stylesheet" href="css/hub.css">
+</head>
+<body class="room-mode">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .4  0 0 0 0 .3  0 0 0 .9 0"/></filter></svg>
+
+<div id="room" class="room">
+  <div class="rig" id="rig">
+    <div class="wall" id="wall"></div>
+    <div class="floor"></div>
+    <div class="tvwrap" id="tvwrap">
+      <div class="stand"></div>
+      <div class="console" aria-hidden="true"><i class="slot"></i><i class="led" id="led"></i></div>
+      <div class="screen" id="screen">
+        <canvas id="bg" width="1442" height="1090"></canvas>
+        <div class="cards" id="cards"></div>
+        <canvas id="fx" width="1442" height="1090"></canvas>
+        <div class="bubble" id="bubble" aria-live="polite"></div>
+        <div class="boot" id="boot">
+          <div class="b-os" id="bOs"></div>
+          <div class="b-bar"><i id="bBar"></i></div>
+          <div class="b-logo" id="bLogo" data-t="PROJECT ARCADE">PROJECT ARCADE</div>
+          <button class="b-start" id="bStart" type="button">PRESS START</button>
+        </div>
+        <canvas id="stat" width="240" height="180"></canvas>
+        <div class="crt"></div>
+        <div class="flood" id="flood"></div>
+      </div>
+      <img class="frame" id="frame" src="assets/crt_tv_frame.png" alt="" onerror="this.style.display='none';document.getElementById('tvwrap').classList.add('noframe')">
+      <button class="knob" id="knob" type="button" aria-label="Power on the television"><i></i></button>
+      <div class="knob-hint" id="knobHint">CLICK THE KNOB</div>
+    </div>
+  </div>
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div class="lampglow" id="lampglow"></div>
+  <div class="grain" aria-hidden="true"></div>
+</div>
+
+<div id="ui">
+  <button class="pbtn skip" id="skip" type="button">SKIP INTRO</button>
+  <div class="hud" id="hud">
+    <div class="hud-l"><b id="hudPlayer"></b><span id="hudLevel"></span></div>
+    <div class="hud-r">
+      <span class="coin" id="hudCoin"></span>
+      <button class="pbtn" id="bList" type="button" aria-label="Open project list (L)">LIST</button>
+      <button class="pbtn" id="bTour" type="button" aria-label="Present tour (P)">TOUR</button>
+      <button class="pbtn" id="bSnd" type="button" aria-label="Toggle sound (M)">SOUND OFF</button>
+      <button class="pbtn" id="bCfg" type="button" aria-label="Settings">SET</button>
+    </div>
+  </div>
+  <div class="mini" id="mini" role="navigation" aria-label="Level select minimap"></div>
+  <div class="chip" id="hint"></div>
+  <div class="chip tourchip" id="tourChip"></div>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="pad" id="pad"><button type="button" data-k="left" aria-label="Walk left">&lt;</button><button type="button" data-k="right" aria-label="Walk right">&gt;</button><button type="button" class="ent" data-k="enter" aria-label="Enter door">ENTER</button></div>
+
+  <div class="ov" id="ovList" role="dialog" aria-label="Project list"><div class="ov-in"><h2>LEVEL SELECT</h2><ol id="listRows"></ol><p class="ov-foot">ARROWS + ENTER · ESC CLOSE</p></div></div>
+  <div class="ov" id="ovHall" role="dialog" aria-label="Hall of Fame"><div class="ov-in hall"><div class="hall-poster" id="hallPoster"><span class="hp-t" id="hpT"></span><span class="hp-b">ESHAN H</span></div><div><h2 id="hallH"></h2><ol id="hallRows"></ol><p class="ov-foot" id="aboutLine"></p></div></div></div>
+  <div class="ov" id="ovReg" role="dialog" aria-label="Design Registration"><div class="ov-in reg"><div class="reg-seal">515509-001</div><h2 id="regH"></h2><p id="regBody"></p><p class="ov-foot">ESC CLOSE</p></div></div>
+  <div class="ov cfg" id="ovCfg" role="dialog" aria-label="Settings"><div class="ov-in"><h2>SETTINGS</h2>
+    <label><input type="checkbox" id="cScan" checked> SCANLINES</label>
+    <label><input type="checkbox" id="cQuick"> QUICK MODE (CLICK OPENS INSTANTLY)</label>
+    <label><input type="checkbox" id="cSnd"> SOUND</label>
+    <p class="ov-foot">ESC CLOSE</p></div></div>
+  <div class="tip" id="tip" role="tooltip"></div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/hero.js"></script>
+<script src="js/world.js"></script>
+<script src="js/room.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/engine.js"></script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARGUS</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/explain.css">
+</head><body>
+<canvas id="cv" aria-label="ARGUS noir control room stage"></canvas>
+<div id="grain"></div>
+<a id="back" href="../../index.html?from=argus" aria-label="Back to arcade">&#9664; ARCADE</a>
+<div id="top">
+  <button id="modeBtn" aria-label="Toggle Present and Explore mode">PRESENT</button>
+  <button id="rBtn" aria-label="Reality check">R</button>
+  <button id="tBtn" aria-label="Presenter notes">T</button>
+  <button id="mBtn" aria-label="Sound" aria-pressed="false">M</button>
+  <button id="fBtn" aria-label="Fullscreen">F</button>
+</div>
+<div id="badge">SIMULATION &middot; illustrative</div>
+<div id="hud">
+  <div id="head"></div><div id="cap"></div><div id="take"></div>
+</div>
+<div id="terms"></div>
+<div id="mas"><div id="bub"></div><img id="masimg" src="assets/argus_mascot.png" alt="Argus, a many-eyed watchman mascot" onerror="this.style.display='none'"></div>
+<div id="reg"></div>
+<div id="hunt"><button data-s="0" aria-label="Suspect: red jacket">RED JACKET</button><button data-s="1" aria-label="Suspect: white van">WHITE VAN</button></div>
+<div id="rc"></div>
+<div id="notes"></div>
+<div id="dots"></div>
+<div id="hint">&rarr; &larr; move &middot; P explore &middot; R reality &middot; T notes &middot; M sound &middot; F full</div>
+<div id="ctl">
+  <div class="grp"><span>CAMERAS</span><button id="cm" aria-label="Fewer cameras">-</button><b id="cn">6</b><button id="cp" aria-label="More cameras">+</button></div>
+  <div class="grp"><span>CROWD</span><button id="dm" aria-label="Smaller crowd">-</button><b id="dn">3</b><button id="dp" aria-label="Bigger crowd">+</button></div>
+  <div class="grp"><span>TRIGGERS</span><button class="sw on" data-k="count" aria-pressed="true">COUNT</button><button class="sw on" data-k="scene" aria-pressed="true">SCENE</button><button class="sw on" data-k="hb" aria-pressed="true">20 S</button></div>
+  <button id="evt" aria-label="Suspicious event"><i></i>SUSPICIOUS EVENT</button>
+</div>
+<div id="entry"></div>
+<script src="data/facts.js"></script>
+<script src="js/sim/flow.js"></script>
+<script src="js/sim/race.js"></script>
+<script src="js/scenes/scenes.js"></script>
+<script src="js/main.js"></script>
+<script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body></html>

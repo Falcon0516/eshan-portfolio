@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAVACH · Eshan H</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/explain.css">
+</head>
+<body>
+<div id="app">
+  <div id="cam">
+    <div id="world">
+      <img id="plate" src="assets/comic_street_bg.webp" alt="Graphic-novel night street with glowing lamps">
+      <div id="tint"></div>
+      <div id="twinkles" aria-hidden="true"></div>
+      <div id="woman" aria-label="Silhouette of a woman walking, phone glowing with a shield icon" role="img">
+        <svg viewBox="0 0 160 420" width="160" height="420">
+          <g id="wBody">
+            <path d="M80 40c-12 0-20 9-20 22s8 24 20 24 20-11 20-24-8-22-20-22z" fill="#12082B"/>
+            <path d="M52 100c6-14 20-18 28-18s22 4 28 18l14 120H38z" fill="#12082B"/>
+            <path d="M38 220h84l-8 20H46z" fill="#12082B"/>
+            <g class="leg l1"><path d="M52 236h28l-4 150H56z" fill="#12082B"/><path d="M50 380h34l8 22H46z" fill="#12082B"/></g>
+            <g class="leg l2"><path d="M80 236h28l4 150H84z" fill="#12082B"/><path d="M78 380h34l8 22H76z" fill="#12082B"/></g>
+            <path d="M104 112l34 62-10 6-36-54z" fill="#12082B"/>
+            <path d="M52 108c-14 20-18 50-16 74l12 2c0-22 6-46 16-62z" fill="#12082B"/>
+            <path d="M52 40c-6-2-14 6-10 22s12 40 6 70c10-12 14-30 12-50z" fill="#12082B"/>
+          </g>
+          <g id="wPhone"><rect x="124" y="160" width="26" height="42" rx="5" fill="#3FE0FF" opacity=".95"/><path d="M137 170l9 4v8c0 7-4 11-9 13-5-2-9-6-9-13v-8z" fill="#12082B"/></g>
+          <path d="M60 40c-8 4-12 14-10 24" stroke="#3FE0FF" stroke-width="3" fill="none" opacity=".7"/>
+        </svg>
+        <div id="phoneGlow"></div>
+      </div>
+      <div id="trig"></div>
+      <div id="grid">
+        <div id="wins"></div>
+        <img id="frames" src="assets/panel_frames.png" alt="" draggable="false">
+        <div id="gridTags"></div>
+      </div>
+      <div id="shards" aria-hidden="true"></div>
+      <canvas id="fx" width="2400" height="1600" aria-hidden="true"></canvas>
+      <button id="sosBtn" data-int aria-label="SOS button. Press to replay the burst"><span>SOS</span></button>
+      <div id="sosTag" class="wtag"></div>
+      <div id="p6"></div>
+      <div id="bursts" aria-hidden="true"></div>
+      <div id="shield">
+        <div class="pulse"></div>
+        <img src="assets/kavach_shield.png" alt="Kavach, a shield mascot with a kind face and a small cape" draggable="false">
+        <svg class="sh-fb" viewBox="0 0 200 230" role="img" aria-label="Kavach shield mascot"><path d="M100 10l82 26v70c0 54-36 92-82 112-46-20-82-58-82-112V36z" fill="#1B1464" stroke="#FFC700" stroke-width="12" stroke-linejoin="round"/><circle cx="74" cy="92" r="8" fill="#FFF4E0"/><circle cx="126" cy="92" r="8" fill="#FFF4E0"/><path d="M72 130q28 24 56 0" stroke="#FFF4E0" stroke-width="8" fill="none" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div id="fg" aria-hidden="true"></div>
+  </div>
+
+  <div id="turn" aria-hidden="true"></div>
+  <div id="impact" aria-hidden="true"><div class="lines"></div><div class="flash"></div></div>
+  <div id="halfBloom" aria-hidden="true"></div>
+
+  <div id="hud">
+    <div id="hcap" class="hcap">
+      <h1 id="hHead"></h1>
+      <p id="hCap"></p>
+      <p id="hTk"></p>
+    </div>
+    <div id="stream" aria-live="off"></div>
+    <div id="gantt" hidden></div>
+    <nav id="dots" aria-label="Scenes"></nav>
+    <div id="hint" class="chip" aria-hidden="true"></div>
+    <div id="sim" class="badge" role="note"></div>
+    <div id="ctrls">
+      <button id="btnP" class="ctl" aria-label="Toggle Present or Explore mode"></button>
+      <button id="btnR" class="ctl" aria-label="Reality Check (R)">R</button>
+      <button id="btnT" class="ctl" aria-label="Presenter notes (T)">T</button>
+      <button id="btnM" class="ctl" aria-label="Sound on or off (M)">M</button>
+      <button id="btnF" class="ctl" aria-label="Fullscreen (F)">F</button>
+    </div>
+  </div>
+
+  <div id="explore" hidden role="region" aria-label="Explore mode">
+    <div id="xtabs" role="tablist"></div>
+    <div id="xbody"></div>
+  </div>
+
+  <div id="reality" hidden role="dialog" aria-label="Reality Check"></div>
+  <div id="notes" hidden role="note"></div>
+  <div id="tip" role="tooltip" hidden></div>
+  <a id="arcade" href="../../index.html?from=kavach" aria-label="Back to the arcade"></a>
+  <div id="cover" hidden aria-hidden="true"><div class="cv-in"><b>KAVACH</b><i>N.I.D.A.R</i></div></div>
+</div>
+<script src="data/facts.js"></script>
+<script src="js/util.js"></script>
+<script src="js/sim/flow.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/panels.js"></script>
+<script src="js/overlays.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/scenes/scenes.js"></script>
+<script src="js/explore.js"></script>
+<script src="js/main.js"></script>
+<script src="data/explain.js"></script>
+<script src="js/explain.js"></script>
+</body>
+</html>
