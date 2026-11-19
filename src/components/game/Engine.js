@@ -28,7 +28,8 @@ export function buildWorld(G) {
   // 1. START (0 to 1200)
   sg(60, G - 60, "WELCOME! Use ← → SPACE. Hit ? blocks!");
   sg(450, G - 60, "→ Explore portals, memory walls, and hover certs!");
-  cr(150, G - 50, 6, 40); pl(350, G - 80, 180); cr(360, G - 110, 4, 38); pl(700, G - 80, 140); cr(710, G - 110, 3, 38); cr(950, G - 50, 4, 35);
+  cr(150, G - 50, 6, 40); pl(350, G - 80, 180); cr(360, G - 110, 4, 38); pl(700, G - 80, 140); cr(710, G - 110, 3, 38); cr(950, G - 50, 2, 35);
+  pt(1050, G, "arcade_hub"); sg(1000, G - 100, "🕹️ ARCADE HUB");
 
   // 2. EDUCATION (1200 to 3200)
   sg(1240, G - 60, "── EDUCATION ZONE ──");
@@ -51,18 +52,22 @@ export function buildWorld(G) {
 
   // 5. PROJECTS (6400 to 9600)
   sg(6440, G - 60, "── PROJECT ZONE ──");
+  pt(6470, G, "arcade_hub");
   pt(6600, G, "saathi"); cr(6610, G - 120, 5, 38); 
   pt(7000, G, "axiom"); cr(7010, G - 120, 5, 35);
   pt(7400, G, "argus"); cr(7410, G - 120, 5, 38);
   pl(7800, G - 80, 200); qb(7870, G - 80 - B, "avangard"); cr(7810, G - 110, 4, 40);
   pl(8200, G - 80, 180); qb(8260, G - 80 - B, "kavach"); cr(8210, G - 110, 4, 35);
   pl(8550, G - 80, 200); qb(8620, G - 80 - B, "prashasan"); cr(8560, G - 110, 5, 32);
-  cr(8950, G - 50, 10, 35);
+  pl(8900, G - 80, 180); qb(8960, G - 80 - B, "personaforge"); cr(8910, G - 110, 4, 35);
+  pl(9240, G - 80, 180); qb(9300, G - 80 - B, "usb-tcp-bridge"); cr(9250, G - 110, 4, 35);
 
   // 6. AGRICULTURE BIOME (9600 to 12000)
   sg(9640, G - 60, "── VERIFARM (AGRI-BIOME) ──");
+  pl(10020, G - 80, 180); qb(10080, G - 80 - B, "soil-and-toil"); cr(10030, G - 110, 4, 35);
   pt(10500, G, "verifarm"); cr(10400, G - 120, 8, 40);
-  cr(11200, G - 50, 10, 40);
+  pl(10950, G - 80, 180); qb(11010, G - 80 - B, "pro-rover"); cr(10960, G - 110, 4, 35);
+  cr(11250, G - 50, 6, 40);
 
   // 7. MEMORIES II (12000 to 13200)
   sg(12040, G - 60, "── THE GRIND ──");

@@ -216,6 +216,11 @@ export default function PortfolioGame() {
     stateRef.current.cardShowing = true;
   }, []);
 
+  const onCrateDone = useCallback(() => {
+    setRevealStage("card");
+    stateRef.current.cardShowing = true;
+  }, []);
+
   const closeCard = useCallback(() => {
     setActiveCard(null);
     setRevealStage("idle");
@@ -412,7 +417,8 @@ export default function PortfolioGame() {
       keys[e.code] = true; 
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.code)) e.preventDefault(); 
       if (stateRef.current.cardShowing) { 
-        if (e.code === "Escape" || e.code === "Enter") closeCard(); 
+        if (e.code === "Escape") closeCard();
+        else if (e.code === "Enter" && !(e.target && e.target.closest && e.target.closest("a, button"))) closeCard();
       } else if (stateRef.current.minigameShowing) {
         // mini-game components handle their own key input; ignore global shortcuts here
       } else {
@@ -507,7 +513,7 @@ export default function PortfolioGame() {
       }
 
       for (const b of blocks) {
-        if (p.x + PLAYER_W > b.x && p.x < b.x + b.w && p.y + PLAYER_H >= b.y + b.bounceY && p.y + PLAYER_H <= b.y + b.bounceY + b.h + 10 && p.vy >= 0) {
+        if (b.type === "block" && p.x + PLAYER_W > b.x && p.x < b.x + b.w && p.y + PLAYER_H >= b.y + b.bounceY && p.y + PLAYER_H <= b.y + b.bounceY + b.h + 10 && p.vy >= 0) {
           p.y = b.y + b.bounceY - PLAYER_H; p.vy = 0; p.grounded = true;
         }
 
@@ -810,6 +816,19 @@ export default function PortfolioGame() {
               <button className="title-start" style={{background:'transparent', border:'1px solid #ff006e', color:'#ff006e'}} onClick={() => window.open('/Eshan_Portfolio/index.html', '_blank')}>▶ RECRUITER SKIP</button>
             </div>
 
+            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3, duration: 0.5 }}
+                style={{ position: 'absolute', top: '-40px', fontSize: '10px', color: '#ffd700', background: 'rgba(0,0,0,0.8)', padding: '5px 10px', borderRadius: '4px', border: '1px solid #ffd700', whiteSpace: 'nowrap' }}
+              >
+                Play 9 interactive project showcases
+                <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #ffd700', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
+              </motion.div>
+              <a className="title-start" style={{background:'transparent', border:'1px solid #ffd700', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}} href="/arcade/index.html?from=portfolio">🕹️ PROJECT ARCADE</a>
+            </div>
+
           </div>
           <div className="title-controls"><kbd>←</kbd> <kbd>→</kbd> Move &bull; <kbd>SPACE</kbd> Jump &bull; <kbd>ENTER</kbd> Open Card</div>
         </div>
@@ -891,8 +910,8 @@ export default function PortfolioGame() {
       {/* REVEAL STATE MACHINE: crate/crystal → card */}
       {revealStage === "crate" && revealContent && (
         (revealContent.revealStyle === "crystal" && graphicsTier !== "low")
-          ? <ErrorBoundary><CrystalShatterReveal accent={revealAccent} onDone={() => { setRevealStage("card"); stateRef.current.cardShowing = true; }} /></ErrorBoundary>
-          : <CrateReveal accent={revealAccent} anchor={revealAnchor} onDone={() => { setRevealStage("card"); stateRef.current.cardShowing = true; }} reducedMotion={prefersReducedMotion} />
+          ? <ErrorBoundary><CrystalShatterReveal accent={revealAccent} onDone={onCrateDone} /></ErrorBoundary>
+          : <CrateReveal accent={revealAccent} anchor={revealAnchor} onDone={onCrateDone} reducedMotion={prefersReducedMotion} />
       )}
 
       {revealStage === "card" && revealContent && (
@@ -911,6 +930,8 @@ export default function PortfolioGame() {
                 {revealContent.narration && <div className="card-narration"><TypeWriter text={revealContent.narration} /></div>}
                 {revealContent.tech && <div className="card-tech">{revealContent.tech.map(t => <span key={t}>{t}</span>)}</div>}
                 <div className="card-links">
+                  {revealContent.arcadePortal && <a href={revealContent.arcadePortal}>ENTER PROJECT ARCADE →</a>}
+                  {revealContent.showcase && <a href={revealContent.showcase}>PLAY SHOWCASE →</a>}
                   {revealContent.link && <a href={revealContent.link} target="_blank" rel="noopener noreferrer">OPEN →</a>}
                   {revealContent.github && <a href={revealContent.github} target="_blank" rel="noopener noreferrer" className="secondary">GITHUB →</a>}
                 </div>
@@ -937,6 +958,8 @@ export default function PortfolioGame() {
                 {activeCard.narration && <div className="card-narration"><TypeWriter text={activeCard.narration} /></div>}
                 {activeCard.tech && <div className="card-tech">{activeCard.tech.map(t => <span key={t}>{t}</span>)}</div>}
                 <div className="card-links">
+                  {activeCard.arcadePortal && <a href={activeCard.arcadePortal}>ENTER PROJECT ARCADE →</a>}
+                  {activeCard.showcase && <a href={activeCard.showcase}>PLAY SHOWCASE →</a>}
                   {activeCard.link && <a href={activeCard.link} target="_blank" rel="noopener noreferrer">OPEN →</a>}
                   {activeCard.github && <a href={activeCard.github} target="_blank" rel="noopener noreferrer" className="secondary">GITHUB →</a>}
                 </div>

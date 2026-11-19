@@ -169,10 +169,11 @@ export function drawBlock(ctx, b, t) {
     const rad = b.w / 2;
     const px = x + rad, py = y + rad;
     
+    const isArcade = b.contentKey === "arcade_hub";
     const grad = ctx.createRadialGradient(px, py, 0, px, py, rad);
     grad.addColorStop(0, "rgba(255,255,255,0.9)");
-    grad.addColorStop(0.2, "rgba(0,255,255,0.8)");
-    grad.addColorStop(0.8, "rgba(138,43,226,0.5)");
+    grad.addColorStop(0.2, isArcade ? "rgba(255,215,0,0.85)" : "rgba(0,255,255,0.8)");
+    grad.addColorStop(0.8, isArcade ? "rgba(255,0,110,0.55)" : "rgba(138,43,226,0.5)");
     grad.addColorStop(1, "rgba(0,0,0,0)");
     
     ctx.save();
@@ -194,10 +195,10 @@ export function drawBlock(ctx, b, t) {
     
     ctx.restore();
     
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fillStyle = isArcade ? "#ffd700" : "rgba(255,255,255,0.8)";
     ctx.font = '10px "Press Start 2P",monospace';
     ctx.textAlign = "center";
-    ctx.fillText("ENTER", x + b.w / 2, y - 10);
+    ctx.fillText(isArcade ? "ARCADE" : "ENTER", x + b.w / 2, y - 10);
   } else if (b.type === "hover") {
     // Hover-Reveal Cert
     ctx.save();
