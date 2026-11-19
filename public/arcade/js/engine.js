@@ -214,14 +214,15 @@
     try { visited = JSON.parse(A.store('arc_v') || '{}') || {}; } catch (e) { visited = {}; }
     for (var s in visited) A.ui.markVisited(s);
     var m = /[?&]from=([^&#]*)/.exec(location.search), from = m ? decodeURIComponent(m[1]) : null;
-    if (from && from !== 'hub') { visited[from] = 1; saveVisited(); A.ui.markVisited(from); }
+    var isDoorSlug = !!(from && from !== 'hub' && from !== 'portfolio' && from !== 'pro' && from !== 'game');
+    if (isDoorSlug) { visited[from] = 1; saveVisited(); A.ui.markVisited(from); }
     document.addEventListener('click', function (ev) { var b = ev.target.closest && ev.target.closest('.pbtn'); if (b) b.blur(); });
     window.addEventListener('keydown', onKey); window.addEventListener('keyup', onKeyUp); bindMouse();
     window.addEventListener('blur', function () { S.keys.left = S.keys.right = S.keys.run = 0; });
     document.addEventListener('visibilitychange', function () { last = 0; if (document.hidden) A.audio.loop(false); else if (S.state === 'WORLD') A.audio.loop(true); });
     window.addEventListener('resize', function () { if (S.state === 'WORLD') A.room.fit('world', true); });
     var skip = A.store('arc_skip') === '1';
-    if (from && from !== 'hub') { A.engine.startWorld(from); }
+    if (isDoorSlug) { A.engine.startWorld(from); }
     else if (skip || from === 'hub') { A.room.skipTo(); A.engine.startWorld(null); }
     requestAnimationFrame(frame);
   }

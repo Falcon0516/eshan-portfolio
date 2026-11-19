@@ -7,6 +7,27 @@
 
   A.ui = {
     init: function () {
+      var bPort = $('bPort');
+      if (bPort) {
+        if (location.protocol === 'file:') {
+          bPort.href = D.portfolio.url;
+          bPort.target = '_blank';
+          bPort.rel = 'noopener noreferrer';
+          bPort.setAttribute('aria-label', 'Open live portfolio website (opens in a new tab)');
+        } else {
+          var fm = /[?&]from=([^&#]*)/.exec(location.search || '');
+          var fval = fm ? decodeURIComponent(fm[1]) : '';
+          var ret = store('arc_return') || '';
+          if (fval === 'pro') ret = '/Eshan_Portfolio/index.html';
+          else if (fval === 'portfolio' || fval === 'game') {
+            var ref = document.referrer || '';
+            ret = (ref && ref.indexOf(location.origin) === 0 && ref.indexOf('/Eshan_Portfolio') !== -1) ? '/Eshan_Portfolio/index.html' : '/';
+          }
+          if (!ret) ret = '/';
+          store('arc_return', ret);
+          bPort.href = ret;
+        }
+      }
       $('hudPlayer').textContent = D.boot.hud; $('hudLevel').textContent = D.boot.level; $('hudCoin').textContent = D.boot.projects;
       $('hint').textContent = D.ui.hint; $('tourChip').textContent = D.ui.tourHint;
       var m = $('mini'); D.cards.forEach(function (c, i) { var b = document.createElement('button'); b.type = 'button'; b.style.setProperty('--c', c.c[0]); b.setAttribute('aria-label', 'Go to ' + c.title); b.title = c.title; b.addEventListener('click', function () { A.engine.walkTo(i); }); m.appendChild(b); mini.push(b); });

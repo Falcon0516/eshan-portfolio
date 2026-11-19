@@ -107,6 +107,11 @@ body.noscan .crt{background:radial-gradient(ellipse at 50% 50%,transparent 52%,r
 .pbtn{pointer-events:auto;min-height:44px;min-width:44px;padding:8px 14px;font-size:16px;letter-spacing:2px;color:var(--paper);background:rgba(13,10,30,.82);border:3px solid var(--gold);box-shadow:4px 4px 0 #000;transition:transform .12s}
 .pbtn:hover{transform:translate(-1px,-1px)}
 .pbtn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #000}
+.pbtn:focus-visible{outline:3px solid var(--cy);outline-offset:2px}
+.port-btn{position:absolute;left:max(20px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));display:inline-flex;align-items:center;gap:6px;text-decoration:none;z-index:60;font-size:14px;padding:6px 12px;transition:transform .12s,opacity .4s}
+body.hudhide .port-btn{opacity:0}
+body.hudhide .port-btn:focus-visible{opacity:1}
+body.playing .hud-l{margin-top:52px}
 .skip{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:none}
 body.room-mode .skip,body.boot-mode .skip{display:block}
 .hud{position:absolute;left:0;right:0;top:0;padding:max(16px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left));display:none;justify-content:space-between;align-items:flex-start;pointer-events:none;transition:opacity .4s}
