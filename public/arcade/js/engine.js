@@ -159,12 +159,12 @@
     if (e.ctrlKey || e.metaKey || e.altKey) return; var k = e.key, kl = k.length === 1 ? k.toLowerCase() : k; touch(); S.keys.run = e.shiftKey ? 1 : 0;
     if (kl === 'm') { A.audio.setMuted(!A.audio.isMuted()); return; }
     if (kl === 'f') { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (x) {} return; }
+    if (k === 'Escape') { if (A.ui.closeAll()) { e.preventDefault(); return; } if (S.tour !== null) A.engine.tour(false); S.target = null; return; }
+    if (S.overlay) { if (A.ui.key(e)) e.preventDefault(); return; }
     if (S.state === 'ROOM_IDLE') { if (kl === 'n') { document.body.classList.toggle('night'); return; } if (k === 'Shift' || k === 'Tab') return; e.preventDefault(); A.engine.powerOn(); return; }
     if (S.state === 'TV_ON') return;
     if (S.state === 'BOOT' || S.state === 'PRESS_START') { if (k === 'Shift' || k === 'Tab') return; e.preventDefault(); A.engine.startWorld(null); return; }
     if (S.state === 'ENTERING' || S.state === 'RETURNING') { if (S.state === 'ENTERING' && S.seq && S.seq.slug && !S.seq.n) { S.seq.n = 1; go(S.seq.slug); } else if (S.state === 'RETURNING') finishReturn(); e.preventDefault(); return; }
-    if (k === 'Escape') { if (!A.ui.closeAll()) { if (S.tour !== null) A.engine.tour(false); S.target = null; } return; }
-    if (S.overlay) { if (A.ui.key(e)) e.preventDefault(); return; }
     if (S.state !== 'WORLD') return;
     if (kl.length === 1 && /[a-z]/.test(kl)) { buf = (buf + kl).slice(-14); for (var n in NAMES) if (buf.slice(-n.length) === n) { buf = ''; S.tour = null; A.ui.tourChip(false); A.engine.walkTo(NAMES[n]); return; } }
     switch (kl) {

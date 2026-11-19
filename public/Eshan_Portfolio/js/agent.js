@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok) throw new Error('bad response');
       const data = await res.json();
       typingEl.remove();
-      addMessage(data.reply || "Signal's a bit weak — try asking that again.", 'bot');
+      addMessage(data.reply || "Signal is weak right now. Try asking that again.", 'bot');
     } catch (err) {
       typingEl.remove();
       addMessage(localFallback(text), 'bot');
@@ -89,12 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // serverless function isn't reachable) ----
   function localFallback(q) {
     const s = q.toLowerCase();
-    if (s.includes('argus')) return "Project Argus is Eshan's final-year capstone — a decentralized, multi-node AI surveillance platform with dynamic agent spawning for real-time detection and cross-camera tracking. You can open the live demo from the Builds section above.";
-    if (s.includes('saathi')) return "SAATHI is an AI health-screening assistant reachable over SMS, calls, and WhatsApp, in native Indian languages, built for people using basic feature phones. It won 2nd place at Innovathon IMPULSE 2026 and was pitched to and selected by Sujai's Dental Clinic in Bengaluru.";
-    if (s.includes('intern') || s.includes('job') || s.includes('hire') || s.includes('role')) return "Yes — Eshan is actively looking for internship and entry-level opportunities. Best way to reach him is via the contact section at the bottom of this page, or directly at eshanh051116@gmail.com.";
-    if (s.includes('achievement') || s.includes('biggest') || s.includes('award')) return "Hard to pick just one, but the 30-day streak stands out: 5 hackathon wins across 4 different teams, plus a Best Research Paper Award at ICRIET-2025 for work on 3D-printed battlefield medical aids.";
-    if (s.includes('research') || s.includes('paper')) return "Two published/awarded works: a Best Paper Award at ICRIET-2025 on 3D-printed medical aids for hemorrhage control, and a study on SkillM, a gamified e-learning platform that improved test scores by 63% for underserved students.";
-    if (s.includes('education') || s.includes('college') || s.includes('cgpa')) return "Eshan is a final-year Computer Science Engineering student at SJB Institute of Technology, Bengaluru, with a CGPA of 9.21+.";
-    return "I'm running on a local fallback right now (the live AI backend isn't connected in this preview). Try asking about Project Argus, SAATHI, his research papers, or whether he's open to opportunities — I've got answers cached for those.";
+    if (s.includes('argus')) return "Project ARGUS is Eshan's final-year capstone, a multi-camera AI surveillance platform running on an 8 GB MacBook. It holds Indian Design Application No. 515509-001 (design registration, published in Patent Office Journal 41/2026) and has a live demo and showcase in Project Arcade.";
+    if (s.includes('saathi')) return "SAATHI is a voice-AI phone assistant answering real calls in English, Hindi, and Kannada without paid telephony APIs. It won 2nd place at AI-STHETICA AIVORA 2026 and Innovathon IMPULSE 6.0.";
+    if (s.includes('gigbirds') || s.includes('experience') || s.includes('work')) return "Since Sep 2026, Eshan has been working part-time as an App Developer at GigBirds, building two Flutter apps (students and recruiters) and a FastAPI backend with Groq Llama 3.3 70B and Qwen 27B.";
+    if (s.includes('resume') || s.includes('cv')) return "You can preview and download Eshan's resume directly using the Resume button in the navigation bar or hero section.";
+    if (s.includes('intern') || s.includes('job') || s.includes('hire') || s.includes('role')) return "Eshan is looking for opportunities to grow as a software engineer and learn how real systems are built and kept running. Reach him via the Contact section or at eshanh051116@gmail.com.";
+    if (s.includes('achievement') || s.includes('biggest') || s.includes('award') || s.includes('patent') || s.includes('design')) return "Across 15+ hackathons, Eshan has 8 podium finishes including four 1st places (ADVAYA 2.0, Beam Build Battle, Ideathon, SIH Internal 2026), a Best Paper Award at ICRIET-2025, and Indian Design Registration 515509-001 (published) for ARGUS.";
+    if (s.includes('research') || s.includes('paper')) return "Best Paper Award at ICRIET-2025 for 3D-printed medical aids (published in IJCRT, Vol. 13), plus a co-authored SkillM e-learning study submitted to Educational Technology & Society.";
+    if (s.includes('education') || s.includes('college') || s.includes('cgpa')) return "Eshan is a final-year B.E. CSE student at SJBIT Bengaluru (VTU, 2023 to 2027) with a 9.28 CGPA, after 91.5% in Pre-University (PCMC) and 97.44% in SSLC.";
+    return "Running on local fallback right now. Try asking about Project ARGUS, GigBirds, SAATHI, his design registration, research papers, or resume.";
   }
 });

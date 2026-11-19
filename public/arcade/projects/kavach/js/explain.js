@@ -30,7 +30,9 @@
     try { saved = sessionStorage.getItem('arc_return') || ''; } catch (e) {}
     if (from === 'pro') {
       saved = '/Eshan_Portfolio/index.html';
-    } else if (from === 'portfolio' || from === 'game') {
+    } else if (from === 'game') {
+      saved = '/';
+    } else if (from === 'portfolio') {
       var ref = document.referrer || '';
       if (ref && ref.indexOf(location.origin) === 0 && ref.indexOf('/Eshan_Portfolio') !== -1) {
         saved = '/Eshan_Portfolio/index.html';
@@ -67,7 +69,7 @@
     el('span', 'ex-arr', '\u2197', goBtn);
   }
 
-  /* Return path button: PORTFOLIO */
+  /* Return path button: PORTFOLIO + RESUME trigger */
   var portBtn = el('a', null, '\u25C0 PORTFOLIO', document.body);
   portBtn.id = 'ex-port';
   var portUrl = resolvePortfolioUrl();
@@ -80,13 +82,28 @@
     portBtn.setAttribute('aria-label', 'Back to Eshan portfolio');
   }
 
+  var resBtn = el('button', null, 'RESUME', document.body);
+  resBtn.id = 'ex-res';
+  resBtn.type = 'button';
+  resBtn.setAttribute('aria-label', 'View and download Eshan H resume');
+  resBtn.setAttribute('aria-haspopup', 'dialog');
+
+  function rectsOverlap(x, y, rw, rh, r, pad) {
+    if (!r || r.width <= 0 || r.height <= 0) return false;
+    var p = pad || 6;
+    return x < r.right + p && x + rw > r.left - p && y < r.bottom + p && y + rh > r.top - p;
+  }
+
   function layoutChrome() {
     var w = window.innerWidth;
     var backEl = document.getElementById('back') || document.getElementById('arcade');
     if (w <= 820) {
       if (portBtn.parentNode !== topBar) topBar.insertBefore(portBtn, topBar.firstChild);
+      if (resBtn.parentNode !== topBar) topBar.appendChild(resBtn);
       portBtn.style.left = '';
       portBtn.style.top = '';
+      resBtn.style.left = '';
+      resBtn.style.top = '';
       var maxB = 56;
       var sels = ['#back', '#arcade', '#top', '#topbar', '#bar', '#ctrls', '#modes', '#keys', '#toggles', '#modeBtn', '#modebtn', '#simbadge', '.badge', '#badge', '#tools'];
       sels.forEach(function (sel) {
@@ -103,19 +120,36 @@
     }
 
     if (portBtn.parentNode !== document.body) document.body.appendChild(portBtn);
+    if (resBtn.parentNode !== document.body) document.body.appendChild(resBtn);
     root.removeProperty('--ex-mob-top');
-    if (backEl) {
-      var br = backEl.getBoundingClientRect();
-      if (br.width > 0 && br.height > 0) {
-        if (th.left) {
-          portBtn.style.left = Math.round(br.left) + 'px';
-          portBtn.style.top = Math.round(br.bottom + 8) + 'px';
-        } else {
-          portBtn.style.left = Math.round(br.right + 8) + 'px';
-          portBtn.style.top = Math.round(br.top) + 'px';
-        }
+    var br = backEl ? backEl.getBoundingClientRect() : null;
+    if (br && br.width > 0 && br.height > 0) {
+      if (th.left) {
+        portBtn.style.left = Math.round(br.left) + 'px';
+        portBtn.style.top = Math.round(br.bottom + 8) + 'px';
+      } else {
+        portBtn.style.left = Math.round(br.right + 8) + 'px';
+        portBtn.style.top = Math.round(br.top) + 'px';
       }
     }
+    var pr = portBtn.getBoundingClientRect();
+    var tr = topBar.getBoundingClientRect();
+    var rr = resBtn.getBoundingClientRect();
+    var cands = [
+      [Math.round(pr.right + 8), Math.round(pr.top)],
+      [Math.round(br && br.width > 0 ? br.left : pr.left), Math.round(Math.max(br && br.width > 0 ? br.bottom : 0, pr.bottom) + 8)],
+      [Math.round(pr.left), Math.round(pr.bottom + 8)]
+    ];
+    var chosen = cands[1];
+    for (var ci = 0; ci < cands.length; ci++) {
+      var cx = cands[ci][0], cy = cands[ci][1];
+      if (cx >= 8 && cx + rr.width <= w - 8 && !rectsOverlap(cx, cy, rr.width, rr.height, tr, 8) && !rectsOverlap(cx, cy, rr.width, rr.height, br, 6)) {
+        chosen = cands[ci];
+        break;
+      }
+    }
+    resBtn.style.left = chosen[0] + 'px';
+    resBtn.style.top = chosen[1] + 'px';
   }
   layoutChrome();
   window.addEventListener('resize', layoutChrome);
@@ -152,27 +186,85 @@
     footGo.rel = 'noopener noreferrer';
     footGo.setAttribute('aria-label', 'Take me to project ' + D.title + ' (' + destKind + ', opens in a new tab)');
   }
+  var footRes = el('button', null, 'VIEW RESUME', foot);
+  footRes.id = 'ex-foot-res';
+  footRes.type = 'button';
   (D.links || []).forEach(function (l) { var a = el('a', null, l.label + '  ' + l.url, foot); a.href = 'https://' + l.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; });
   el('span', 'sp', '', foot); el('span', 'k', 'E or Esc to close', foot);
 
-  var open = false, last = null;
+  /* Resume preview + PDF download modal */
+  var resScrim = el('div', null, null, document.body);
+  resScrim.id = 'ex-res-scrim';
+  resScrim.setAttribute('role', 'dialog');
+  resScrim.setAttribute('aria-modal', 'true');
+  resScrim.setAttribute('aria-label', 'Eshan H Resume Preview');
+  var resCard = el('div', null, null, resScrim); resCard.id = 'ex-res-card';
+  var resHead = el('div', null, null, resCard); resHead.id = 'ex-res-head';
+  el('h2', null, 'ESHAN H \u00b7 RESUME', resHead);
+  var resActs = el('div', 'ex-res-acts', null, resHead);
+  var resDl = el('a', 'ex-res-btn dl', 'DOWNLOAD PDF', resActs);
+  resDl.href = '../../assets/resume/Eshan_H_Resume.pdf';
+  resDl.setAttribute('download', 'Eshan_H_Resume.pdf');
+  var resOpenPdf = el('a', 'ex-res-btn', 'OPEN PDF \u2197', resActs);
+  resOpenPdf.href = '../../assets/resume/Eshan_H_Resume.pdf';
+  resOpenPdf.target = '_blank';
+  resOpenPdf.rel = 'noopener noreferrer';
+  var resClose = el('button', 'ex-res-btn', '\u00d7 CLOSE', resActs);
+  resClose.id = 'ex-res-x';
+  resClose.type = 'button';
+  resClose.setAttribute('aria-label', 'Close resume preview');
+  var resPages = el('div', null, null, resCard); resPages.id = 'ex-res-pages'; resPages.tabIndex = 0;
+  el('div', null, 'ESC TO CLOSE \u00b7 DOWNLOAD OR OPEN PDF ANYTIME', resCard).id = 'ex-res-foot';
+
+  var open = false, resOpen = false, last = null, resLast = null;
   function set(on) {
     if (on === open) return; open = on; scrim.classList.toggle('on', on); document.body.classList.toggle('ex-open', on);
     if (on) { last = document.activeElement; main.scrollTop = 0; x.focus(); } else if (last && last.focus) { try { last.focus(); } catch (e) {} }
   }
+  function setRes(on) {
+    if (on === resOpen) return; resOpen = on;
+    if (on && !resPages.dataset.loaded) {
+      resPages.dataset.loaded = '1';
+      ['../../assets/resume/resume_page_1.webp', '../../assets/resume/resume_page_2.webp'].forEach(function (src, idx) {
+        var img = el('img', null, null, resPages);
+        img.src = src;
+        img.alt = 'Eshan H Resume page ' + (idx + 1);
+        img.loading = 'lazy';
+        img.decoding = 'async';
+      });
+    }
+    resScrim.classList.toggle('on', on);
+    document.body.classList.toggle('ex-res-open', on);
+    if (on) { resLast = document.activeElement; resPages.scrollTop = 0; resClose.focus(); }
+    else if (resLast && resLast.focus) { try { resLast.focus(); } catch (e) {} }
+  }
   btn.addEventListener('click', function (e) { e.stopPropagation(); set(true); });
+  resBtn.addEventListener('click', function (e) { e.stopPropagation(); setRes(true); });
+  footRes.addEventListener('click', function (e) { e.stopPropagation(); set(false); setRes(true); });
   x.addEventListener('click', function () { set(false); });
   scrim.addEventListener('click', function (e) { if (e.target === scrim) set(false); });
+  resClose.addEventListener('click', function () { setRes(false); });
+  resScrim.addEventListener('click', function (e) { if (e.target === resScrim) setRes(false); });
   ['pointerdown', 'click', 'wheel', 'touchstart'].forEach(function (t) {
     scrim.addEventListener(t, function (e) { e.stopPropagation(); });
+    resScrim.addEventListener(t, function (e) { e.stopPropagation(); });
     topBar.addEventListener(t, function (e) { e.stopPropagation(); });
     portBtn.addEventListener(t, function (e) { e.stopPropagation(); });
+    resBtn.addEventListener(t, function (e) { e.stopPropagation(); });
   });
   window.addEventListener('arcade:open-explain', function () { set(true); });
   window.addEventListener('keydown', function (e) {
     if (document.body.classList.contains('ch-open')) return;
     var k = e.key, tag = (e.target && e.target.tagName) || '';
     if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    if (resOpen) {
+      if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); setRes(false); return; }
+      if (k === 'Tab') return;
+      if (k === 'ArrowDown' || k === 'PageDown') { resPages.scrollBy({ top: k === 'ArrowDown' ? 90 : resPages.clientHeight * 0.8 }); e.preventDefault(); e.stopImmediatePropagation(); return; }
+      if (k === 'ArrowUp' || k === 'PageUp') { resPages.scrollBy({ top: k === 'ArrowUp' ? -90 : -resPages.clientHeight * 0.8 }); e.preventDefault(); e.stopImmediatePropagation(); return; }
+      e.stopImmediatePropagation();
+      return;
+    }
     if ((k === 'e' || k === 'E') && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.stopImmediatePropagation(); set(!open); return; }
     if (!open) return;
     if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); set(false); return; }

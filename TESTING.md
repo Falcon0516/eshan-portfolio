@@ -22,12 +22,12 @@ All checks below were run on branch `feature/arcade-merge` against a local produ
 ## 3. Professional Mode (`/Eshan_Portfolio/index.html`)
 - Verified `Project Arcade` link (`/arcade/index.html?from=portfolio`) and all 9 project `PLAY SHOWCASE` + `TAKE ME TO PROJECT` links (including KAVACH fallback to `https://github.com/Falcon0516`).
 - Verified all images in `#work` loaded (`brokenImgs: []`), 0 console/page errors, and 0 horizontal overflow at 1440x900.
-- Verified click roundtrip: `/Eshan_Portfolio/index.html` -> `Project Arcade` -> `/arcade/index.html?from=portfolio` -> `PORTFOLIO` returns to `/Eshan_Portfolio/index.html`.
+- Verified click roundtrip: `/Eshan_Portfolio/index.html` -> `Project Arcade` -> `/arcade/index.html?from=pro` -> `PORTFOLIO` returns to `/Eshan_Portfolio/index.html`.
 
 ## 4. Playable Game Mode (`/`)
-- Verified Title Screen shows `PRESS START`, `RECRUITER SKIP`, and `PROJECT ARCADE`.
-- Verified walking right (`ArrowRight`) into `arcade_hub` opens `PROJECT ARCADE` card with `ENTER PROJECT ARCADE` (`/arcade/index.html?from=portfolio`), navigating to `/arcade/` and returning via `PORTFOLIO` to `/`.
-- Verified mobile touch D-pad (`390x844`) triggers `arcade_hub` portal, and `SAATHI` project card renders `PLAY SHOWCASE` (`/arcade/projects/saathi/index.html?from=portfolio`).
+- Verified Title Screen shows `PRESS START`, `RECRUITER SKIP`, `PROJECT ARCADE`, and `RESUME`.
+- Verified walking right (`ArrowRight`) into `arcade_hub` opens `PROJECT ARCADE` card with `ENTER PROJECT ARCADE` (`/arcade/index.html?from=game`), navigating to `/arcade/` and returning via `PORTFOLIO` to `/`.
+- Verified mobile touch D-pad (`390x844`) triggers `arcade_hub` portal, and `SAATHI` project card renders `PLAY SHOWCASE` (`/arcade/projects/saathi/index.html?from=game`).
 
 ## 5. All 9 Arcade Projects (1440x900, 1280x720, 390x844) + Offline `file://`
 - Verified all 9 projects (`argus`, `axiom`, `kavach`, `personaforge`, `pro-rover`, `saathi`, `soil-and-toil`, `usb-tcp-bridge`, `verifarm`) at 1440x900, 1280x720, and 390x844:
@@ -38,3 +38,23 @@ All checks below were run on branch `feature/arcade-merge` against a local produ
 - Verified `file://` directly on `public/arcade/index.html` and `public/arcade/projects/saathi/index.html`:
   - 0 console errors
   - Chat shows `"Chat needs internet. Open the EXPLAIN card for the full story."` + `OPEN EXPLAIN` button and answers starter chips locally from `window.EXPLAIN`.
+
+## 6. Follow-up Verification: Visibility, Resume Modals & ARGUS KB Update
+- `node scripts/generate-project-context.mjs`: generates `src/data/project-context.json` (9 projects) and `src/data/argus-prompt.json` (9 KB project blocks, system prompt, and full knowledge base; preserves existing `argus-prompt.json` if root `.md` files are absent during CI builds).
+- `npm run build`: exited 0 after final changes.
+- `/api/chat` (without local `GROQ_API_KEY`): `GET` returns `200 { ok: true, configured: false }`; empty messages or unknown `project` returns `400`; `POST` (both main `{ message }` and `{ project: "argus", message }`) returns `503 { offline: true }` without leaking `GROQ_API_KEY`.
+- Resume assets (`Eshan_H_Resume.pdf`, `resume_page_1.webp`, `resume_page_2.webp`) return `200` at both `/resume/*` and `/arcade/assets/resume/*`.
+- **Professional Mode (`/Eshan_Portfolio/index.html`)** at `1440x900`, `1280x720`, `390x844`:
+  - Verified Nav (`Project Arcade` link + `Resume` pill + mobile drawer `#navMobileResume`) and above-the-fold Hero CTAs (`Project Arcade ↗`, `View Resume`, `Download PDF`).
+  - Verified updated KB facts (`GigBirds`, `Sep 2026`, `515509-001` "Design Registration, Published", `15+`, `8` podiums, `SIH Internal Hackathon 2026`, `Vigyantra`, `PRASHASAN`, `LoRa`, `91.5%`, `97.44%`), 0 `"patent granted"` matches, 0 broken images.
+  - Verified `#heroResumeBtn` & `#navMobileResume` open `#resumeModal.open`, both WebP pages load (`naturalWidth > 0`), and `Escape` closes cleanly.
+  - Verified ARGUS chat fallback mentions `515509-001` without `"patent granted"`.
+- **Playable Game Mode (`/`)** at `1280x720`, `390x844`:
+  - Verified Title Screen `🕹️ PROJECT ARCADE` (`?from=game`) + `📄 RESUME` button and in-game `.hud-quick-actions` (`🕹️ ARCADE`, `📄 RESUME`, `BGM`, `SFX`) do not overlap `.game-hud`.
+  - Verified `.game-resume-modal` renders both resume pages cleanly from both Title Screen and HUD, and closes on `Escape`.
+- **Arcade Hub (`/arcade/`) & All 9 Projects** at `1440x900`, `1280x720`, `390x844` + `file://`:
+  - Verified `#bResume` opens `#ovResume.on`, loads both WebP pages, closes cleanly on `Escape` even in `ROOM_IDLE`, and `.port-bar` does not overlap `.hud-l` or `.hud-r` in `playing` mode on `390x844`.
+  - Verified `#bPort` and `#ex-port` honor `?from=pro` (`/Eshan_Portfolio/index.html`) and `?from=game` (`/`).
+  - Verified all 9 project pages (`argus`, `saathi`, `verifarm`, `soil-and-toil`, `axiom`, `personaforge`, `kavach`, `pro-rover`, `usb-tcp-bridge`) have 0 overlaps among `#ex-port`, `#ex-res`, `#ex-btn`, `#ex-go`, `#back`/`#arcade`, 0 horizontal overflow, `#ex-res` & `#ex-foot-res` open `#ex-res-scrim.on` with lazy WebP images, and `Escape` closes without leaving the page.
+  - Verified offline `file://` direct open on `public/arcade/index.html` and `public/arcade/projects/verifarm/index.html` loads both Resume images cleanly.
+- Known local-only environment exclusions when running `next start` offline: `/_vercel/insights/script.js` and missing pre-existing `/favicon.ico` return 404 locally, and live Groq completions require `GROQ_API_KEY` on Vercel.

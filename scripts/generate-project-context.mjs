@@ -1,10 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
+import { fileURLToPath } from 'url';
 
-const ROOT = process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, '..');
 const PROJECTS_DIR = path.join(ROOT, 'public', 'arcade', 'projects');
 const OUT_FILE = path.join(ROOT, 'src', 'data', 'project-context.json');
+const ARGUS_OUT = path.join(ROOT, 'src', 'data', 'argus-prompt.json');
 
 const SLUGS = [
   'saathi',
@@ -58,4 +62,37 @@ for (const slug of SLUGS) {
 }
 
 fs.writeFileSync(OUT_FILE, JSON.stringify(contextMap, null, 2) + '\n', 'utf8');
-console.log(`Generated ${OUT_FILE} for ${Object.keys(contextMap).length} projects.`);
+
+const kbPath = path.join(ROOT, 'ARGUS_KNOWLEDGE_BASE.md');
+const promptPath = path.join(ROOT, 'ARGUS_SYSTEM_PROMPT.md');
+const hasSources = fs.existsSync(kbPath) && fs.existsSync(promptPath);
+let blockCount = 0;
+
+if (hasSources) {
+  const knowledgeBase = fs.readFileSync(kbPath, 'utf8').trim();
+  const systemPrompt = fs.readFileSync(promptPath, 'utf8').trim();
+
+  // Extract ### 7.x ... [slug] sections from ARGUS_KNOWLEDGE_BASE.md
+  const kbProjectBlocks = {};
+  const chunks = knowledgeBase.split(/^### /m);
+  for (const chunk of chunks) {
+    const m = /^7\.\d+[^\n]*\[([a-z0-9-]+)\]/i.exec(chunk);
+    if (m) {
+      kbProjectBlocks[m[1]] = '### ' + chunk.trim();
+    }
+  }
+  blockCount = Object.keys(kbProjectBlocks).length;
+
+  fs.writeFileSync(
+    ARGUS_OUT,
+    JSON.stringify({ systemPrompt, knowledgeBase, kbProjectBlocks }, null, 2) + '\n',
+    'utf8'
+  );
+} else if (fs.existsSync(ARGUS_OUT)) {
+  const existing = JSON.parse(fs.readFileSync(ARGUS_OUT, 'utf8'));
+  blockCount = Object.keys(existing.kbProjectBlocks || {}).length;
+}
+
+console.log(
+  `Generated ${OUT_FILE} (${Object.keys(contextMap).length} projects) and ${hasSources ? 'updated' : 'preserved'} ${ARGUS_OUT} (${blockCount} KB project blocks).`
+);

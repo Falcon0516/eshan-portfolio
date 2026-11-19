@@ -108,10 +108,19 @@ body.noscan .crt{background:radial-gradient(ellipse at 50% 50%,transparent 52%,r
 .pbtn:hover{transform:translate(-1px,-1px)}
 .pbtn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #000}
 .pbtn:focus-visible{outline:3px solid var(--cy);outline-offset:2px}
-.port-btn{position:absolute;left:max(20px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));display:inline-flex;align-items:center;gap:6px;text-decoration:none;z-index:60;font-size:14px;padding:6px 12px;transition:transform .12s,opacity .4s}
-body.hudhide .port-btn{opacity:0}
-body.hudhide .port-btn:focus-visible{opacity:1}
+.port-bar{position:absolute;left:max(20px,env(safe-area-inset-left));top:max(16px,env(safe-area-inset-top));display:flex;align-items:center;gap:8px;flex-wrap:wrap;z-index:60;transition:opacity .4s}
+.port-btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-size:14px;padding:6px 12px;transition:transform .12s,opacity .4s}
+body.hudhide .port-bar{opacity:0}
+body.hudhide .port-bar:focus-within{opacity:1}
 body.playing .hud-l{margin-top:52px}
+.ov-in.res-box{width:min(920px,94vw);max-height:90vh;display:flex;flex-direction:column;gap:12px}
+.res-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.res-head h2{margin:0;font-size:22px;letter-spacing:3px}
+.res-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.res-actions a.pbtn{text-decoration:none;display:inline-flex;align-items:center;font-size:14px;padding:6px 12px}
+.res-actions .res-dl{background:var(--gold);color:#000}
+.res-pages{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;align-items:center;padding:4px}
+.res-pages img{width:100%;max-width:780px;height:auto;border:3px solid var(--gold);background:#fff;display:block}
 .skip{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:none}
 body.room-mode .skip,body.boot-mode .skip{display:block}
 .hud{position:absolute;left:0;right:0;top:0;padding:max(16px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left));display:none;justify-content:space-between;align-items:flex-start;pointer-events:none;transition:opacity .4s}
@@ -140,12 +149,12 @@ body.playing .mini{display:flex}
 .pad{position:absolute;left:0;right:0;bottom:max(70px,env(safe-area-inset-bottom));padding:0 18px;display:none;justify-content:space-between;pointer-events:none}
 .pad button{pointer-events:auto;min-width:72px;min-height:72px;font-size:26px;border:4px solid var(--gold);background:rgba(13,10,30,.8);color:#fff;box-shadow:5px 5px 0 #000;touch-action:none}
 .pad .ent{font-size:16px;letter-spacing:2px;padding:0 14px;background:var(--mag)}
-@media (pointer:coarse),(max-width:700px){body.playing .pad{display:flex}.hud-r .pbtn{padding:6px 10px;font-size:14px}.hud-l b{font-size:16px}.chip{display:none}.coin{font-size:14px;padding-left:34px}}
+@media (pointer:coarse),(max-width:700px){body.playing .pad{display:flex}body.playing .hud{padding-top:68px}body.playing .hud-l{margin-top:0}.hud-r .pbtn{padding:6px 10px;font-size:14px}.hud-l b{font-size:16px}.chip{display:none}.coin{font-size:14px;padding-left:34px}}
 .tip{position:absolute;max-width:300px;padding:8px 12px;background:#0d0a1a;border:3px solid var(--cy);color:#fff;font-size:15px;line-height:1.3;text-transform:none;opacity:0;pointer-events:none;transition:opacity .12s;z-index:99}
 .tip.on{opacity:1}
 
 /* overlays */
-.ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(8,5,16,.84);padding:24px}
+.ov{position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(8,5,16,.84);padding:24px}
 .ov.on{display:flex;animation:ovin .3s var(--ease)}
 @keyframes ovin{from{opacity:0;transform:scale(1.04)}}
 .ov-in{position:relative;max-width:min(1100px,94vw);max-height:92vh;overflow:auto;padding:30px 36px;background:#0d0a1a;border:5px solid var(--gold);box-shadow:10px 10px 0 #000;min-width:min(520px,90vw)}

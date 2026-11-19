@@ -19,7 +19,8 @@
           var fval = fm ? decodeURIComponent(fm[1]) : '';
           var ret = store('arc_return') || '';
           if (fval === 'pro') ret = '/Eshan_Portfolio/index.html';
-          else if (fval === 'portfolio' || fval === 'game') {
+          else if (fval === 'game') ret = '/';
+          else if (fval === 'portfolio') {
             var ref = document.referrer || '';
             ret = (ref && ref.indexOf(location.origin) === 0 && ref.indexOf('/Eshan_Portfolio') !== -1) ? '/Eshan_Portfolio/index.html' : '/';
           }
@@ -42,9 +43,9 @@
       $('regH').textContent = D.reg.head; $('regBody').textContent = D.reg.body;
       var hr = $('hallRows'); D.awards.forEach(function (a) { var li = document.createElement('li'), b = document.createElement('b'), s = document.createElement('span'); b.textContent = a.rank; s.textContent = a.text; li.appendChild(b); li.appendChild(s); hr.appendChild(li); });
       /* buttons */
-      $('bList').addEventListener('click', A.ui.openList); $('bTour').addEventListener('click', function () { A.engine.tour(!S.tour); });
+      $('bList').addEventListener('click', A.ui.openList); $('bResume').addEventListener('click', function () { A.ui.openResume(); }); $('bTour').addEventListener('click', function () { A.engine.tour(!S.tour); });
       $('bSnd').addEventListener('click', function () { A.audio.setMuted(!A.audio.isMuted()); store('arc_snd', A.audio.isMuted() ? '0' : '1'); });
-      $('bCfg').addEventListener('click', function () { A.ui.openCfg(); }); $('skip').addEventListener('click', function () { A.engine.skipIntro(); });
+      $('bCfg').addEventListener('click', function () { A.ui.openCfg(); }); $('resClose').addEventListener('click', function () { A.ui.closeAll(); }); $('ovResume').addEventListener('click', function (e) { if (e.target === $('ovResume')) A.ui.closeAll(); }); $('skip').addEventListener('click', function () { A.engine.skipIntro(); });
       $('cScan').addEventListener('change', function (e) { document.body.classList.toggle('noscan', !e.target.checked); store('arc_scan', e.target.checked ? '1' : '0'); });
       $('cQuick').addEventListener('change', function (e) { S.quick = e.target.checked; store('arc_quick', S.quick ? '1' : '0'); });
       $('cSnd').addEventListener('change', function (e) { A.audio.setMuted(!e.target.checked); });
@@ -82,6 +83,22 @@
     },
     openReg: function () { openOv('ovReg'); },
     openCfg: function () { openOv('ovCfg'); $('cScan').focus(); },
+    openResume: function () {
+      var pages = $('resPages');
+      if (pages && !pages.dataset.loaded) {
+        pages.dataset.loaded = '1';
+        ['assets/resume/resume_page_1.webp', 'assets/resume/resume_page_2.webp'].forEach(function (src, idx) {
+          var img = document.createElement('img');
+          img.src = src;
+          img.alt = 'Eshan H Resume page ' + (idx + 1);
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          pages.appendChild(img);
+        });
+      }
+      openOv('ovResume');
+      if ($('resClose')) $('resClose').focus();
+    },
     /* overlay keyboard: returns true when handled */
     key: function (e) {
       if (S.overlay === 'ovList') {

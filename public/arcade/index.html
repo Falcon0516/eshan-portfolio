@@ -42,7 +42,10 @@
 </div>
 
 <div id="ui">
-  <a class="pbtn port-btn" id="bPort" href="/" aria-label="Return to portfolio">&#9664; PORTFOLIO</a>
+  <div class="port-bar">
+    <a class="pbtn port-btn" id="bPort" href="/" aria-label="Return to portfolio">&#9664; PORTFOLIO</a>
+    <button class="pbtn port-btn" id="bResume" type="button" aria-label="Preview and download resume">RESUME</button>
+  </div>
   <button class="pbtn skip" id="skip" type="button">SKIP INTRO</button>
   <div class="hud" id="hud">
     <div class="hud-l"><b id="hudPlayer"></b><span id="hudLevel"></span></div>
@@ -68,6 +71,18 @@
     <label><input type="checkbox" id="cQuick"> QUICK MODE (CLICK OPENS INSTANTLY)</label>
     <label><input type="checkbox" id="cSnd"> SOUND</label>
     <p class="ov-foot">ESC CLOSE</p></div></div>
+  <div class="ov" id="ovResume" role="dialog" aria-label="Resume Preview"><div class="ov-in res-box">
+    <div class="res-head">
+      <h2>ESHAN H · RESUME</h2>
+      <div class="res-actions">
+        <a class="pbtn res-dl" href="assets/resume/Eshan_H_Resume.pdf" download="Eshan_H_Resume.pdf" aria-label="Download resume PDF">DOWNLOAD PDF</a>
+        <a class="pbtn" href="assets/resume/Eshan_H_Resume.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open resume PDF in new tab">OPEN PDF &#8599;</a>
+        <button class="pbtn" id="resClose" type="button" aria-label="Close resume">CLOSE</button>
+      </div>
+    </div>
+    <div class="res-pages" id="resPages"></div>
+    <p class="ov-foot">ESC CLOSE</p>
+  </div></div>
   <div class="tip" id="tip" role="tooltip"></div>
 </div>
 

@@ -86,6 +86,7 @@ export default function PortfolioGame() {
   const stateRef = useRef({
     cardShowing: false,
     minigameShowing: false,
+    resumeShowing: false,
   });
   
   const minigamePlayCounts = useRef({
@@ -113,6 +114,7 @@ export default function PortfolioGame() {
   const [cliLines, setCliLines] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [showFinish, setShowFinish] = useState(false);
+  const [showResume, setShowResume] = useState(false);
   const [finishShown, setFinishShown] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -215,6 +217,28 @@ export default function PortfolioGame() {
     setActiveCard(content);
     stateRef.current.cardShowing = true;
   }, []);
+
+  const openResume = useCallback(() => {
+    setShowResume(true);
+    stateRef.current.resumeShowing = true;
+  }, []);
+
+  const closeResume = useCallback(() => {
+    setShowResume(false);
+    stateRef.current.resumeShowing = false;
+  }, []);
+
+  useEffect(() => {
+    if (!showResume) return;
+    const onEsc = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeResume();
+      }
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [showResume, closeResume]);
 
   const onCrateDone = useCallback(() => {
     setRevealStage("card");
@@ -337,7 +361,7 @@ export default function PortfolioGame() {
 
   // Canvas click handler
   const handleCanvasClick = useCallback((e) => {
-    if (!gameRef.current || stateRef.current.cardShowing || stateRef.current.minigameShowing) return;
+    if (!gameRef.current || stateRef.current.cardShowing || stateRef.current.minigameShowing || stateRef.current.resumeShowing) return;
     const { blocks, camera } = gameRef.current;
     const rect = e.target.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
@@ -416,6 +440,7 @@ export default function PortfolioGame() {
     const onKeyDown = (e) => { 
       keys[e.code] = true; 
       if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.code)) e.preventDefault(); 
+      if (stateRef.current.resumeShowing) return;
       if (stateRef.current.cardShowing) { 
         if (e.code === "Escape") closeCard();
         else if (e.code === "Enter" && !(e.target && e.target.closest && e.target.closest("a, button"))) closeCard();
@@ -469,7 +494,7 @@ export default function PortfolioGame() {
     let animId, lastTime = performance.now();
 
     function update(dt) {
-      if (stateRef.current.cardShowing || stateRef.current.minigameShowing) return;
+      if (stateRef.current.cardShowing || stateRef.current.minigameShowing || stateRef.current.resumeShowing) return;
       if (gameRef.current.hitStop > 0) {
         gameRef.current.hitStop -= dt;
         return;
@@ -826,7 +851,10 @@ export default function PortfolioGame() {
                 Play 9 interactive project showcases
                 <div style={{ position: 'absolute', bottom: '-5px', left: '50%', transform: 'translateX(-50%)', borderTop: '5px solid #ffd700', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }} />
               </motion.div>
-              <a className="title-start" style={{background:'transparent', border:'1px solid #ffd700', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}} href="/arcade/index.html?from=portfolio">🕹️ PROJECT ARCADE</a>
+              <a className="title-start" style={{background:'transparent', border:'1px solid #ffd700', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}} href="/arcade/index.html?from=game">🕹️ PROJECT ARCADE</a>
+            </div>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <button type="button" className="title-start" style={{background:'transparent', border:'1px solid #39ff14', color:'#39ff14'}} onClick={openResume}>📄 RESUME</button>
             </div>
 
           </div>
@@ -877,7 +905,7 @@ export default function PortfolioGame() {
       </AnimatePresence>
 
       {zoneLabel && <div className="zone-enter" key={zoneLabel}><div className="zone-num">{zoneName}</div><div className="zone-name">{zoneLabel}</div></div>}
-      <GuideBubble initialMsg={guideMsg} x={guideBubblePos.x} y={guideBubblePos.y} keepOpen={started} hidden={!!activeCard || revealStage !== "idle" || skillTreeActive || !!minigame || showFinish} />
+      <GuideBubble initialMsg={guideMsg} x={guideBubblePos.x} y={guideBubblePos.y} keepOpen={started} hidden={!!activeCard || revealStage !== "idle" || skillTreeActive || !!minigame || showFinish || showResume} />
       {blockHint && <div className="block-hint" style={{ left: blockHintPos.x, top: blockHintPos.y }}>{blockHint}</div>}
 
       <div className="toast-container">
@@ -980,10 +1008,38 @@ export default function PortfolioGame() {
         />
       )}
 
-      {started && revealStage === "idle" && !activeCard && !minigame && !(skillTreeActive && !skillTreeDismissed) && !showFinish && (
-        <div style={{position: 'absolute', top: 20, right: 20, zIndex: 10000, display: 'flex', gap: '10px'}}>
-           <button className="music-toggle" style={{position:'static', fontSize:'10px'}} onClick={toggleMusic}>BGM: {musicOn ? "ON" : "OFF"}</button>
-           <button className="music-toggle" style={{position:'static', fontSize:'10px'}} onClick={toggleSfx}>SFX: {sfxOn ? "ON" : "OFF"}</button>
+      {started && revealStage === "idle" && !activeCard && !minigame && !(skillTreeActive && !skillTreeDismissed) && !showFinish && !showResume && (
+        <div className="hud-quick-actions">
+           <a className="music-toggle" style={{position:'static', fontSize:'10px', borderColor:'rgba(255,215,0,0.45)', color:'#ffd700', textDecoration:'none', display:'inline-flex', alignItems:'center'}} href="/arcade/index.html?from=game">🕹️ ARCADE</a>
+           <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px', borderColor:'rgba(0,255,255,0.45)', color:'#00ffff'}} onClick={openResume}>📄 RESUME</button>
+           <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px'}} onClick={toggleMusic}>BGM: {musicOn ? "ON" : "OFF"}</button>
+           <button type="button" className="music-toggle" style={{position:'static', fontSize:'10px'}} onClick={toggleSfx}>SFX: {sfxOn ? "ON" : "OFF"}</button>
+        </div>
+      )}
+
+      {showResume && (
+        <div
+          className="game-resume-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Eshan H Resume Preview"
+          onClick={(e) => { if (e.target === e.currentTarget) closeResume(); }}
+        >
+          <div className="game-resume-modal">
+            <div className="game-resume-head">
+              <span className="game-resume-title">ESHAN H · RESUME (2 PAGES)</span>
+              <div className="game-resume-acts">
+                <a className="game-resume-btn dl" href="/resume/Eshan_H_Resume.pdf" download="Eshan_H_Resume.pdf">⬇ DOWNLOAD PDF</a>
+                <a className="game-resume-btn" href="/resume/Eshan_H_Resume.pdf" target="_blank" rel="noopener noreferrer">OPEN PDF ↗</a>
+                <button type="button" className="game-resume-btn" onClick={closeResume}>✕ CLOSE</button>
+              </div>
+            </div>
+            <div className="game-resume-pages">
+              <img src="/resume/resume_page_1.webp" alt="Eshan H Resume page 1" loading="lazy" decoding="async" />
+              <img src="/resume/resume_page_2.webp" alt="Eshan H Resume page 2" loading="lazy" decoding="async" />
+            </div>
+            <div className="game-resume-foot">ESC TO CLOSE · DOWNLOAD OR OPEN PDF ANYTIME</div>
+          </div>
         </div>
       )}
       

@@ -27,13 +27,17 @@
     <ul class="nav-links" id="navLinks">
       <li><a href="#skills" data-nav="skills">Skills</a></li>
       <li><a href="#work" data-nav="work">Work</a></li>
+      <li><a href="/arcade/index.html?from=pro" class="nav-link-arcade">Project Arcade</a></li>
       <li><a href="#awards" data-nav="awards">Awards</a></li>
       <li><a href="#research" data-nav="research">Research</a></li>
       <li><a href="#gallery" data-nav="gallery">Gallery</a></li>
       <li><a href="#contact" data-nav="contact">Contact</a></li>
       <span class="nav-indicator" id="navIndicator"></span>
     </ul>
-    <a href="#contact" class="nav-cta magnetic">Get in Touch</a>
+    <div class="nav-actions">
+      <button type="button" class="nav-resume" id="navResumeBtn">Resume</button>
+      <a href="#contact" class="nav-cta magnetic">Get in Touch</a>
+    </div>
     <button class="nav-toggle" id="navToggle" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
@@ -42,6 +46,8 @@
 <div class="nav-mobile" id="navMobile">
   <a href="#skills">Skills</a>
   <a href="#work">Work</a>
+  <a href="/arcade/index.html?from=pro" class="nav-link-arcade">Project Arcade &#8599;</a>
+  <button type="button" class="nav-mobile-btn" id="navMobileResume">Resume (Preview &amp; PDF)</button>
   <a href="#awards">Awards</a>
   <a href="#research">Research</a>
   <a href="#gallery">Gallery</a>
@@ -58,6 +64,11 @@
   <p class="hero-eyebrow reveal">Portfolio — 2026</p>
   <h1 class="hero-title reveal" data-split>Eshan H.</h1>
   <p class="hero-sub reveal">Engineer. Builder. Researcher.<br>Turning curiosity into things that work.</p>
+  <div class="hero-actions reveal">
+    <a href="/arcade/index.html?from=pro" class="btn btn-primary magnetic">Project Arcade &#8599;</a>
+    <button type="button" class="btn btn-ghost magnetic" id="heroResumeBtn">View Resume</button>
+    <a href="/resume/Eshan_H_Resume.pdf" download="Eshan_H_Resume.pdf" class="btn btn-ghost magnetic">Download PDF</a>
+  </div>
 
   <div class="hero-portrait reveal-scale" id="heroPortrait">
     <div class="hero-portrait-glow"></div>
@@ -65,17 +76,17 @@
     <img src="images/headshot-profile.png" alt="Portrait of Eshan H">
 
     <div class="hero-pills-desktop">
-      <div class="spec-pill pill-1" data-pill><span class="num">10+</span>Hackathons</div>
-      <div class="spec-pill pill-2" data-pill><span class="num">5</span>Podium finishes</div>
-      <div class="spec-pill pill-3" data-pill><span class="num">2</span>Published papers</div>
+      <div class="spec-pill pill-1" data-pill><span class="num">15+</span>Hackathons</div>
+      <div class="spec-pill pill-2" data-pill><span class="num">8</span>Podium finishes</div>
+      <div class="spec-pill pill-3" data-pill><span class="num">4</span>1st Places</div>
       <div class="spec-pill pill-4" data-pill><span class="num">9.28</span>CGPA</div>
     </div>
   </div>
 
   <div class="hero-pills-mobile">
-    <div class="spec-pill in"><span class="num">10+</span>Hackathons</div>
-    <div class="spec-pill in"><span class="num">5</span>Podiums</div>
-    <div class="spec-pill in"><span class="num">2</span>Papers</div>
+    <div class="spec-pill in"><span class="num">15+</span>Hackathons</div>
+    <div class="spec-pill in"><span class="num">8</span>Podiums</div>
+    <div class="spec-pill in"><span class="num">4</span>1st Places</div>
     <div class="spec-pill in"><span class="num">9.28</span>CGPA</div>
   </div>
 
@@ -101,6 +112,13 @@
           "If something is important enough, you should try even if the probable outcome is failure."
           <span>— a philosophy borrowed from Elon Musk, and one I actually live by</span>
         </blockquote>
+        <div class="about-exp reveal">
+          <div class="about-exp-head">
+            <span class="about-exp-role">GigBirds · App Developer (Part-time Contract)</span>
+            <span class="about-exp-meta">Sep 2026 - Present</span>
+          </div>
+          <p class="about-exp-copy">Building two Flutter apps (students &amp; recruiters) on a FastAPI backend with Groq Llama 3.3 70B &amp; Qwen 27B AI assistance, physical master-key audit ledger, and Play Store / App Store launch slated for Dec 2026.</p>
+        </div>
       </div>
       <div class="timeline reveal">
         <div class="timeline-item">
@@ -113,15 +131,15 @@
         </div>
         <div class="timeline-item">
           <p class="timeline-year">2023</p>
-          <p class="timeline-desc">Joined SJB Institute of Technology, Computer Science &amp; Engineering.</p>
+          <p class="timeline-desc">Joined SJB Institute of Technology, CSE. Previously 91.5% PU &amp; 97.44% SSLC (Madikeri).</p>
         </div>
         <div class="timeline-item">
           <p class="timeline-year">2025 – 26</p>
-          <p class="timeline-desc">10+ hackathons, 2 published papers, 5 podium finishes.</p>
+          <p class="timeline-desc">15+ hackathons, 8 podium finishes (four 1st places), Best Paper Award (ICRIET-2025), and Indian Design Reg. 515509-001 (published).</p>
         </div>
         <div class="timeline-item now">
           <p class="timeline-year">Now</p>
-          <p class="timeline-desc">Final year. Looking for the next hard problem.</p>
+          <p class="timeline-desc">Final year CSE (2023-27). App Developer at GigBirds, Indian Design Reg. 515509-001 (published), looking for software engineering roles to build and operate real systems.</p>
         </div>
       </div>
     </div>
@@ -640,7 +658,7 @@
       <h2 class="h2 reveal-mask">Built under pressure. Running systems, interactive showcases.</h2>
       <p class="lede">Not slideware — running software, built under deadline, judged by people who ask hard questions.</p>
       <div class="work-arcade-entry">
-        <a href="/arcade/index.html?from=portfolio" class="btn btn-primary magnetic">
+        <a href="/arcade/index.html?from=pro" class="btn btn-primary magnetic">
           Project Arcade
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M4 10L10 4M10 4H5M10 4V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
@@ -657,11 +675,12 @@
         <div class="tag-row">
           <span class="tag-chip live"><span class="live-dot"></span>Live demo</span>
           <span class="tag-chip">Final Year Project</span>
+          <span class="tag-chip">Design Reg. 515509-001 (Published)</span>
         </div>
         <h3 class="flagship-title">Project Argus</h3>
         <p class="flagship-body">A decentralized, agentic AI surveillance platform — a multi-node distributed system with dynamic agent spawning for real-time detection and cross-camera tracking. A FastAPI + WebSocket bridge, held together by NATS messaging, keeps every node in sync in real time.</p>
         <div class="btn-row">
-          <a href="/arcade/projects/argus/index.html?from=portfolio" class="btn btn-primary magnetic">
+          <a href="/arcade/projects/argus/index.html?from=pro" class="btn btn-primary magnetic">
             PLAY SHOWCASE
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M4 10L10 4M10 4H5M10 4V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
@@ -687,7 +706,7 @@
         <h3 class="flagship-title">SAATHI</h3>
         <p class="flagship-body">Voice-based health screening for feature phones. AI reachable over SMS, phone calls, and WhatsApp, in native Indian languages, for people without smartphones or app access. Pitched to and selected by Sujai's Dental Clinic, Bengaluru, for further development.</p>
         <div class="btn-row">
-          <a href="/arcade/projects/saathi/index.html?from=portfolio" class="btn btn-primary magnetic">
+          <a href="/arcade/projects/saathi/index.html?from=pro" class="btn btn-primary magnetic">
             PLAY SHOWCASE
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M4 10L10 4M10 4H5M10 4V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
@@ -712,7 +731,7 @@
         <h3 class="flagship-title">AXIOM</h3>
         <p class="flagship-body">An on-chain safety layer for autonomous AI agents. Six Algorand smart contracts enforce spending limits and multi-signature approval for agents transacting on their own — with a semantic router and behavioral-drift detector watching for anomalies in real time.</p>
         <div class="btn-row">
-          <a href="/arcade/projects/axiom/index.html?from=portfolio" class="btn btn-primary magnetic">
+          <a href="/arcade/projects/axiom/index.html?from=pro" class="btn btn-primary magnetic">
             PLAY SHOWCASE
             <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M4 10L10 4M10 4H5M10 4V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </a>
@@ -733,7 +752,7 @@
           <h4>VeriFarm</h4>
           <p>Blockchain-backed agricultural supply chain traceability, recording and verifying transactions between farmers, distributors, and buyers — with AI-based anomaly detection flagging suspicious activity across the chain.</p>
           <div class="proj-card-actions">
-            <a href="/arcade/projects/verifarm/index.html?from=portfolio" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
+            <a href="/arcade/projects/verifarm/index.html?from=pro" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
             <a href="https://github.com/Falcon0516/VERIFARM_BLOCKCHAIN_AND_AI_FOR_SUPPLYCHAIN_MANAGEMENT_AGRICULTURE" data-arcade-link="verifarm" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost">TAKE ME TO PROJECT ↗</a>
           </div>
         </div>
@@ -745,7 +764,7 @@
           <h4>Soil &amp; Toil</h4>
           <p>Soil nitrogen, phosphorus, potassium, pH and soil type from one phone photo. Rebuilds a spectrum from RGB with an MST++ transformer and PLSR plus 1D-CNN ensemble, giving fertiliser advice for 30 crops in English, Hindi and Kannada.</p>
           <div class="proj-card-actions">
-            <a href="/arcade/projects/soil-and-toil/index.html?from=portfolio" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
+            <a href="/arcade/projects/soil-and-toil/index.html?from=pro" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
             <a href="https://github.com/Falcon0516/Soil_and_Toil_Ai_Powered_soil_spectral_ML_ensemble" data-arcade-link="soil-and-toil" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost">TAKE ME TO PROJECT ↗</a>
           </div>
         </div>
@@ -757,7 +776,7 @@
           <h4>PersonaForge</h4>
           <p>A visual studio for building consistent AI personalities from 144 blocks and 12 templates without writing prompts. Compiles deterministic 11-section prompts, checks conflicts, and deploys to web chat, voice and WhatsApp.</p>
           <div class="proj-card-actions">
-            <a href="/arcade/projects/personaforge/index.html?from=portfolio" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
+            <a href="/arcade/projects/personaforge/index.html?from=pro" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
             <a href="https://persona--forge.vercel.app" data-arcade-link="personaforge" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost">TAKE ME TO PROJECT ↗</a>
           </div>
         </div>
@@ -769,7 +788,7 @@
           <h4>KAVACH</h4>
           <p>An AI-agent platform for emergencies where one trigger fans out across six parallel LangGraph agents: threat scoring, Twilio WhatsApp alerts, FIR drafting, nearest safe-house routing, ARGUS cameras and NCRB hotspot context.</p>
           <div class="proj-card-actions">
-            <a href="/arcade/projects/kavach/index.html?from=portfolio" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
+            <a href="/arcade/projects/kavach/index.html?from=pro" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
             <a href="https://github.com/Falcon0516" data-arcade-link="kavach" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost">TAKE ME TO PROJECT ↗</a>
           </div>
         </div>
@@ -781,7 +800,7 @@
           <h4>Pro-Rover</h4>
           <p>Software for a low-cost autonomous farm rover without LiDAR, Jetson or RTK. An Arduino reads three sonar sensors, an Android phone relays telemetry, and a 10 Hz PID cockpit handles waypoint navigation with sub-15 cm stops.</p>
           <div class="proj-card-actions">
-            <a href="/arcade/projects/pro-rover/index.html?from=portfolio" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
+            <a href="/arcade/projects/pro-rover/index.html?from=pro" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
             <a href="https://github.com/Falcon0516/ANDROID_USB_TCP_BRIDGE_APPLICATION" data-arcade-link="pro-rover" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost">TAKE ME TO PROJECT ↗</a>
           </div>
         </div>
@@ -793,7 +812,7 @@
           <h4>USB-TCP Bridge</h4>
           <p>A native Kotlin Android app that turns a USB-OTG phone into a wireless hub for an Arduino or ESP32 controller, streaming serial bridge, IMU telemetry, GPS and ultrasonic data over four TCP ports with motor fail-safe.</p>
           <div class="proj-card-actions">
-            <a href="/arcade/projects/usb-tcp-bridge/index.html?from=portfolio" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
+            <a href="/arcade/projects/usb-tcp-bridge/index.html?from=pro" class="btn btn-sm btn-primary">PLAY SHOWCASE</a>
             <a href="https://github.com/Falcon0516/ANDROID_USB_TCP_BRIDGE_APPLICATION" data-arcade-link="usb-tcp-bridge" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost">TAKE ME TO PROJECT ↗</a>
           </div>
         </div>
@@ -820,7 +839,7 @@
 
 <!-- STATEMENT BREAK — Work to Awards -->
 <section class="section-hero on-dark">
-  <p class="statement-text reveal-blur-pull"><span class="statement-num">5</span> wins in one month — different teams, different rooms, no shortcuts.</p>
+  <p class="statement-text reveal-blur-pull"><span class="statement-num">8</span> podium finishes across 15+ hackathons: four 1st places, a Best Paper Award, and an Indian design registration.</p>
 </section>
 
 <!-- AWARDS / TROPHY CASE -->
@@ -828,8 +847,8 @@
   <div class="wrap-wide">
     <div class="section-head left reveal">
       <p class="eyebrow on-dark reveal-mask">Evidence Locker</p>
-      <h2 class="h2 reveal-mask">Five wins. One extraordinary month.</h2>
-      <p class="lede">Real teams, real certificates. Drag sideways.</p>
+      <h2 class="h2 reveal-mask">Eight podium finishes. Fifteen-plus hackathons.</h2>
+      <p class="lede">Real teams, real certificates, and a published design registration. Drag sideways.</p>
     </div>
   </div>
 
@@ -909,8 +928,73 @@
         </div>
       </div>
 
+      <div class="trophy-card tilt">
+        <div class="trophy-media trophy-seal seal-gold">
+          <span class="trophy-seal-code">515509-001</span>
+          <span class="trophy-seal-sub">Patent Office Journal 41/2026</span>
+          <span class="trophy-badge badge-gold">Design Reg.</span>
+        </div>
+        <div class="trophy-body">
+          <h4>Indian Design Registration</h4>
+          <p class="meta">ARGUS · Published in Journal 41/2026</p>
+          <p>Design registration accepted and published for "Law Enforcement Monitoring Digital Device", filed jointly with five co-applicants.</p>
+        </div>
+      </div>
+
+      <div class="trophy-card tilt">
+        <div class="trophy-media trophy-seal seal-gold">
+          <span class="trophy-seal-code">SIH 2026</span>
+          <span class="trophy-seal-sub">SJBIT Internal Hackathon</span>
+          <span class="trophy-badge badge-gold">1st Place</span>
+        </div>
+        <div class="trophy-body">
+          <h4>SIH Internal Hackathon 2026</h4>
+          <p class="meta">SJBIT, Bengaluru</p>
+          <p>First place among internal Smart India Hackathon qualifiers at SJB Institute of Technology.</p>
+        </div>
+      </div>
+
+      <div class="trophy-card tilt">
+        <div class="trophy-media trophy-seal">
+          <span class="trophy-seal-code">IDEATHON</span>
+          <span class="trophy-seal-sub">Management &amp; Entrepreneurship</span>
+          <span class="trophy-badge badge-gold">1st Place</span>
+        </div>
+        <div class="trophy-body">
+          <h4>M&amp;E Ideathon</h4>
+          <p class="meta">SJBIT, Bengaluru</p>
+          <p>First place for problem framing, technical architecture, and viability at SJBIT's Management &amp; Entrepreneurship Ideathon.</p>
+        </div>
+      </div>
+
+      <div class="trophy-card tilt">
+        <div class="trophy-media trophy-seal">
+          <span class="trophy-seal-code">INNOVATEX</span>
+          <span class="trophy-seal-sub">70+ Competing Teams</span>
+          <span class="trophy-badge badge-silver">2nd Place</span>
+        </div>
+        <div class="trophy-body">
+          <h4>InnovateX (PRO-ROVER + USB-TCP)</h4>
+          <p class="meta">SJBIT · 70+ teams</p>
+          <p>Second place out of 70+ teams with the autonomous agronomy rover and low-latency Android USB-TCP bridge.</p>
+        </div>
+      </div>
+
+      <div class="trophy-card tilt">
+        <div class="trophy-media trophy-seal">
+          <span class="trophy-seal-code">IIC · SJBIT</span>
+          <span class="trophy-seal-sub">Institution's Innovation Council</span>
+          <span class="trophy-badge badge-paper">MVI + Finalist</span>
+        </div>
+        <div class="trophy-body">
+          <h4>Most Valuable Idea &amp; Refactor</h4>
+          <p class="meta">Institution's Innovation Council, SJBIT</p>
+          <p>Awarded IIC Most Valuable Idea at SJBIT, served as IIC Campus Ambassador, and placed Finalist in Refactor Coding Competition.</p>
+        </div>
+      </div>
+
     </div>
-    <p class="scroll-hint">← Drag to see all five wins →</p>
+    <p class="scroll-hint">← Drag to see all podiums &amp; IP milestones →</p>
   </div>
   </div>
 </section>
@@ -944,18 +1028,54 @@
         </a>
       </div>
 
-      <div class="credential-card reveal" style="--accent:138,92,246; --i:1">
+      <div class="credential-card reveal" style="--accent:201,163,78; --i:1">
+        <div class="credential-top">
+          <span class="credential-issuer">Intellectual Property India · Journal 41/2026</span>
+        </div>
+        <h4 class="credential-title">Law Enforcement Monitoring Digital Device (ARGUS)</h4>
+        <div class="credential-body">
+          <p>Indian Design Application accepted and published in the Patent Office Journal 41/2026 for ARGUS. Filed jointly with five co-applicants.</p>
+        </div>
+        <div class="credential-specs">
+          <div class="credential-spec"><span class="k">Application No.</span><span class="v">515509-001</span></div>
+          <div class="credential-spec"><span class="k">Status</span><span class="v">Design Registration, Published</span></div>
+        </div>
+        <a href="/arcade/projects/argus/index.html?from=pro" class="btn btn-ghost magnetic">
+          Open ARGUS Showcase
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M4 10L10 4M10 4H5M10 4V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="credential-card reveal" style="--accent:138,92,246; --i:2">
         <div class="credential-top">
           <span class="credential-issuer">Educational Technology &amp; Society (ET&amp;S)</span>
         </div>
-        <h4 class="credential-title">SkillM — Transformative Reinforcement</h4>
+        <h4 class="credential-title">SkillM: Transformative Reinforcement</h4>
         <div class="credential-body">
-          <p>"Quantifying the Impact of a Gamified, Offline E-learning Platform in Underserved Contexts" — submitted to <span class="hl">Educational Technology &amp; Society</span>.</p>
+          <p>"Quantifying the Impact of a Gamified, Offline E-learning Platform in Underserved Contexts", submitted to <span class="hl">Educational Technology &amp; Society</span>.</p>
         </div>
         <div class="credential-specs">
           <div class="credential-spec"><span class="k">Impact</span><span class="v">63% score lift</span></div>
           <div class="credential-spec"><span class="k">Significance</span><span class="v">p &lt; .001</span></div>
         </div>
+      </div>
+
+      <div class="credential-card reveal" style="--accent:0,113,227; --i:3">
+        <div class="credential-top">
+          <span class="credential-issuer">SJBIT Tech Team · National Builds</span>
+        </div>
+        <h4 class="credential-title">Vigyantra, PRASHASAN &amp; MSME LoRa Actuator</h4>
+        <div class="credential-body">
+          <p>Main Website Coordinator for SJBIT's Vigyantra tech fest, IIC Campus Ambassador, PRASHASAN offline quantized LLM rural assistant (India Innovates 2026), and clamp-on LoRa borewell valve actuator (MSME Idea Hackathon 6.0).</p>
+        </div>
+        <div class="credential-specs">
+          <div class="credential-spec"><span class="k">Leadership</span><span class="v">Vigyantra Web · IIC</span></div>
+          <div class="credential-spec"><span class="k">Coding</span><span class="v">Refactor Finalist · LeetCode</span></div>
+        </div>
+        <a href="https://vigyantra.vercel.app" target="_blank" rel="noopener noreferrer" class="btn btn-ghost magnetic">
+          Visit Vigyantra
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M4 10L10 4M10 4H5M10 4V9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
       </div>
     </div>
 
@@ -1054,16 +1174,16 @@
   <div class="wrap">
     <div class="stats-row">
       <div class="stat-block reveal">
-        <span class="stat-num" data-count="10">0<span class="plus">+</span></span>
+        <span class="stat-num" data-count="15">0<span class="plus">+</span></span>
         <p class="stat-label">Hackathons entered</p>
       </div>
       <div class="stat-block reveal">
-        <span class="stat-num" data-count="5">0</span>
+        <span class="stat-num" data-count="8">0</span>
         <p class="stat-label">Podium finishes</p>
       </div>
       <div class="stat-block reveal">
-        <span class="stat-num" data-count="2">0</span>
-        <p class="stat-label">Published papers</p>
+        <span class="stat-num" data-count="25">0<span class="plus">+</span></span>
+        <p class="stat-label">Projects built</p>
       </div>
       <div class="stat-block reveal">
         <span class="stat-num" data-decimal="9.28">0.00</span>
@@ -1167,6 +1287,24 @@
   <img src="" alt="" id="lightboxImg">
 </div>
 
+<!-- RESUME MODAL -->
+<div class="resume-modal" id="resumeModal" role="dialog" aria-modal="true" aria-label="Eshan H Resume Preview">
+  <div class="resume-sheet">
+    <div class="resume-bar">
+      <div class="resume-bar-title">
+        <strong>Eshan H · Resume</strong>
+        <span>2 pages · Updated Nov 2026</span>
+      </div>
+      <div class="resume-bar-actions">
+        <a href="/resume/Eshan_H_Resume.pdf" download="Eshan_H_Resume.pdf" class="btn-dl">Download PDF</a>
+        <a href="/resume/Eshan_H_Resume.pdf" target="_blank" rel="noopener noreferrer" class="btn-open">Open PDF &#8599;</a>
+        <button type="button" class="resume-close" id="resumeModalClose" aria-label="Close resume preview">✕</button>
+      </div>
+    </div>
+    <div class="resume-pages" id="resumeModalPages"></div>
+  </div>
+</div>
+
 
 <!-- ARGUS AI ASSISTANT -->
 <button class="agent-toggle" id="agentToggle" aria-label="Open ARGUS assistant">
@@ -1218,6 +1356,53 @@
 <div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
 
 <script src="js/script.js"></script>
+<script>
+(function () {
+  var modal = document.getElementById('resumeModal');
+  var pages = document.getElementById('resumeModalPages');
+  var closeBtn = document.getElementById('resumeModalClose');
+  var navToggle = document.getElementById('navToggle');
+  var navMobile = document.getElementById('navMobile');
+  var lastFocus = null;
+
+  function openResumeModal() {
+    if (!modal || !pages) return;
+    if (!pages.dataset.loaded) {
+      pages.dataset.loaded = '1';
+      ['/resume/resume_page_1.webp', '/resume/resume_page_2.webp'].forEach(function (src, idx) {
+        var img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Eshan H Resume page ' + (idx + 1);
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        pages.appendChild(img);
+      });
+    }
+    if (navToggle) navToggle.classList.remove('open');
+    if (navMobile) navMobile.classList.remove('open');
+    lastFocus = document.activeElement;
+    modal.classList.add('open');
+    pages.scrollTop = 0;
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeResumeModal() {
+    if (!modal || !modal.classList.contains('open')) return;
+    modal.classList.remove('open');
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+  }
+
+  ['navResumeBtn', 'navMobileResume', 'heroResumeBtn'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', openResumeModal);
+  });
+  if (closeBtn) closeBtn.addEventListener('click', closeResumeModal);
+  if (modal) modal.addEventListener('click', function (e) { if (e.target === modal) closeResumeModal(); });
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal && modal.classList.contains('open')) closeResumeModal();
+  });
+})();
+</script>
 <script src="js/agent.js" defer></script>
 <script src="/arcade/data/links.js" defer></script>
 <script>
