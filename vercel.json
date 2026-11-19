@@ -1,0 +1,42 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/arcade/",
+      "destination": "/arcade/index.html"
+    },
+    {
+      "source": "/arcade/projects/:slug/",
+      "destination": "/arcade/projects/:slug/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/arcade/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/arcade/projects/([^/]+)/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/arcade/(.*)\\.(html|js|css)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
