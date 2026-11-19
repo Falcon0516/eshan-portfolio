@@ -18,7 +18,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #copy h1{font-size:clamp(40px,5.4vw,84px);line-height:.95;letter-spacing:-.03em;text-transform:uppercase;font-weight:800;margin:6px 0 10px}
 #copy p{font-size:clamp(24px,1.9vw,30px);line-height:1.2}
 #copy em{display:inline-block;margin-top:12px;font:700 16px var(--mono);color:var(--gold);font-style:normal;text-transform:uppercase}
-#rd{position:fixed;left:50%;top:14vh;transform:translateX(-50%);font:800 clamp(18px,2.4vw,34px) var(--mono);color:var(--mint);text-shadow:0 0 12px #2CFFB8;background:#05100Fcc;padding:6px 14px;letter-spacing:.12em}
+#rd{position:fixed;left:50%;top:max(106px,16vh);transform:translateX(-50%);font:800 clamp(18px,2.4vw,34px) var(--mono);color:var(--mint);text-shadow:0 0 12px #2CFFB8;background:#05100Fcc;padding:6px 14px;letter-spacing:.12em}
 #ledger{position:fixed;top:0;left:0;right:0;height:42px;background:#05100Fe6;border-bottom:1px solid #2CFFB855;display:flex;align-items:center;overflow:hidden;white-space:nowrap;padding-left:150px;font:14px var(--mono);color:var(--mint)}
 #ledger span{display:inline-block;margin-right:28px;opacity:.85}
 #ledger b{color:var(--vio)}

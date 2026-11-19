@@ -47,10 +47,30 @@
     return '/';
   }
 
-  /* Top cluster: EXPLAIN + TAKE ME TO PROJECT (+ docked items on mobile) */
-  var topBar = el('div', th.left ? 'ex-left' : null, null, document.body);
+  /* Top cluster: PORTFOLIO + RESUME + EXPLAIN + TAKE ME TO PROJECT (+ SND? + ?) */
+  var topBar = el('div', null, null, document.body);
   topBar.id = 'ex-top';
-  if (th.top) topBar.style.top = th.top + 'px';
+
+  /* Return path button: PORTFOLIO */
+  var portBtn = el('a', null, null, topBar);
+  portBtn.id = 'ex-port';
+  el('span', 'ex-lbl-desk', '\u25C0 PORTFOLIO', portBtn);
+  el('span', 'ex-lbl-mob', '\u25C0 PORT', portBtn);
+  var portUrl = resolvePortfolioUrl();
+  portBtn.href = portUrl;
+  if (location.protocol === 'file:') {
+    portBtn.target = '_blank';
+    portBtn.rel = 'noopener noreferrer';
+    portBtn.setAttribute('aria-label', 'Open live portfolio website (opens in a new tab)');
+  } else {
+    portBtn.setAttribute('aria-label', 'Back to Eshan portfolio');
+  }
+
+  var resBtn = el('button', null, 'RESUME', topBar);
+  resBtn.id = 'ex-res';
+  resBtn.type = 'button';
+  resBtn.setAttribute('aria-label', 'View and download Eshan H resume');
+  resBtn.setAttribute('aria-haspopup', 'dialog');
 
   var btn = el('button', null, null, topBar); btn.id = 'ex-btn'; btn.type = 'button';
   btn.setAttribute('aria-label', 'Explain this project in detail (E)'); btn.setAttribute('aria-haspopup', 'dialog');
@@ -69,27 +89,6 @@
     el('span', 'ex-lbl-mob', 'PROJECT', goBtn);
     el('span', 'ex-arr', '\u2197', goBtn);
   }
-
-  /* Return path button: PORTFOLIO + RESUME + ? Guide */
-  var portBtn = el('a', null, null, document.body);
-  portBtn.id = 'ex-port';
-  el('span', 'ex-lbl-desk', '\u25C0 PORTFOLIO', portBtn);
-  el('span', 'ex-lbl-mob', '\u25C0 PORT', portBtn);
-  var portUrl = resolvePortfolioUrl();
-  portBtn.href = portUrl;
-  if (location.protocol === 'file:') {
-    portBtn.target = '_blank';
-    portBtn.rel = 'noopener noreferrer';
-    portBtn.setAttribute('aria-label', 'Open live portfolio website (opens in a new tab)');
-  } else {
-    portBtn.setAttribute('aria-label', 'Back to Eshan portfolio');
-  }
-
-  var resBtn = el('button', null, 'RESUME', document.body);
-  resBtn.id = 'ex-res';
-  resBtn.type = 'button';
-  resBtn.setAttribute('aria-label', 'View and download Eshan H resume');
-  resBtn.setAttribute('aria-haspopup', 'dialog');
 
   var tutBtn = el('button', null, '?', topBar);
   tutBtn.id = 'ex-tut-btn';
@@ -121,22 +120,14 @@
     });
   }
 
-  function rectsOverlap(x, y, rw, rh, r, pad) {
-    if (!r || r.width <= 0 || r.height <= 0) return false;
-    var p = pad || 6;
-    return x < r.right + p && x + rw > r.left - p && y < r.bottom + p && y + rh > r.top - p;
-  }
-
   function layoutChrome() {
     var w = window.innerWidth;
     var backEl = document.getElementById('back') || document.getElementById('arcade');
-    if (w <= 820) {
-      if (portBtn.parentNode !== topBar) topBar.insertBefore(portBtn, topBar.firstChild);
-      if (resBtn.parentNode !== topBar) topBar.insertBefore(resBtn, tutBtn);
-      portBtn.style.left = '';
-      portBtn.style.top = '';
-      resBtn.style.left = '';
-      resBtn.style.top = '';
+    if (w <= 920) {
+      topBar.classList.remove('ex-compact');
+      topBar.style.left = '';
+      topBar.style.top = '';
+      topBar.style.transform = '';
       var maxB = 48;
       var sels = ['#back', '#arcade', '#top', '#topbar', '#bar', '#ctrls', '#modes', '#keys', '#toggles', '#modeBtn', '#modebtn', '#tools'];
       sels.forEach(function (sel) {
@@ -152,37 +143,63 @@
       return;
     }
 
-    if (portBtn.parentNode !== document.body) document.body.appendChild(portBtn);
-    if (resBtn.parentNode !== document.body) document.body.appendChild(resBtn);
     root.removeProperty('--ex-mob-top');
+    var ledgerEl = document.getElementById('ledger');
     var br = backEl ? backEl.getBoundingClientRect() : null;
-    if (br && br.width > 0 && br.height > 0) {
-      if (th.left) {
-        portBtn.style.left = Math.round(br.left) + 'px';
-        portBtn.style.top = Math.round(br.bottom + 8) + 'px';
-      } else {
-        portBtn.style.left = Math.round(br.right + 8) + 'px';
-        portBtn.style.top = Math.round(br.top) + 'px';
+    var rowY = br && br.width > 0 ? Math.round(br.top) : 12;
+    if (ledgerEl) {
+      var lr = ledgerEl.getBoundingClientRect();
+      if (lr.width > w * 0.7 && lr.top <= 12) rowY = Math.round(lr.bottom + 10);
+    }
+
+    /* Find the widest clean horizontal slot on rowY without overlapping native controls or badges */
+    var bandTop = rowY - 2, bandBot = rowY + 46;
+    var blocked = [];
+    var scanNodes = document.querySelectorAll('a, button, #simbadge, .badge, #badge');
+    for (var si = 0; si < scanNodes.length; si++) {
+      var node = scanNodes[si];
+      if ((node.id || '').indexOf('ex-') === 0 || (node.id || '').indexOf('ch-') === 0) continue;
+      if (node.closest('#ex-top, #ex-scrim, #ex-res-scrim, #ex-tut, #ch-panel')) continue;
+      var st = window.getComputedStyle(node);
+      if (st.display === 'none' || st.visibility === 'hidden' || st.opacity === '0') continue;
+      var nr = node.getBoundingClientRect();
+      if (nr.width <= 0 || nr.height <= 0 || nr.right <= 0 || nr.left >= w) continue;
+      if (nr.bottom > bandTop && nr.top < bandBot) {
+        blocked.push([Math.max(0, nr.left - 8), Math.min(w, nr.right + 8)]);
       }
     }
-    var pr = portBtn.getBoundingClientRect();
-    var tr = topBar.getBoundingClientRect();
-    var rr = resBtn.getBoundingClientRect();
-    var cands = [
-      [Math.round(pr.right + 8), Math.round(pr.top)],
-      [Math.round(br && br.width > 0 ? br.left : pr.left), Math.round(Math.max(br && br.width > 0 ? br.bottom : 0, pr.bottom) + 8)],
-      [Math.round(pr.left), Math.round(pr.bottom + 8)]
-    ];
-    var chosen = cands[1];
-    for (var ci = 0; ci < cands.length; ci++) {
-      var cx = cands[ci][0], cy = cands[ci][1];
-      if (cx >= 8 && cx + rr.width <= w - 8 && !rectsOverlap(cx, cy, rr.width, rr.height, tr, 8) && !rectsOverlap(cx, cy, rr.width, rr.height, br, 6)) {
-        chosen = cands[ci];
-        break;
-      }
+    blocked.sort(function (a, b) { return a[0] - b[0]; });
+    var merged = [];
+    for (var bi = 0; bi < blocked.length; bi++) {
+      var cur = blocked[bi];
+      if (!merged.length || cur[0] > merged[merged.length - 1][1]) merged.push([cur[0], cur[1]]);
+      else merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], cur[1]);
     }
-    resBtn.style.left = chosen[0] + 'px';
-    resBtn.style.top = chosen[1] + 'px';
+
+    var cursor = 8, bestL = 8, bestR = w - 8, bestW = 0;
+    for (var mi = 0; mi < merged.length; mi++) {
+      if (merged[mi][0] - cursor > bestW) {
+        bestW = merged[mi][0] - cursor;
+        bestL = cursor; bestR = merged[mi][0];
+      }
+      cursor = Math.max(cursor, merged[mi][1]);
+    }
+    if ((w - 8) - cursor > bestW) {
+      bestW = (w - 8) - cursor;
+      bestL = cursor; bestR = w - 8;
+    }
+
+    topBar.classList.remove('ex-compact');
+    topBar.style.transform = 'none';
+    topBar.style.top = rowY + 'px';
+    var fullW = topBar.getBoundingClientRect().width;
+    if (fullW > bestW) {
+      topBar.classList.add('ex-compact');
+    }
+    var finalW = topBar.getBoundingClientRect().width;
+    var x = Math.round(bestL + Math.max(0, (bestW - finalW) / 2));
+    x = Math.max(bestL, Math.min(x, bestR - finalW));
+    topBar.style.left = Math.max(8, x) + 'px';
   }
   layoutChrome();
   window.addEventListener('resize', layoutChrome);
@@ -443,13 +460,13 @@
     if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); set(false); return; }
     if (k === 'Tab') return;
     if (k === 'ArrowDown' || k === 'PageDown' || k === ' ') {
-      var box = window.innerWidth <= 820 ? scrollWrap : main;
+      var box = window.innerWidth <= 920 ? scrollWrap : main;
       e.stopImmediatePropagation();
       if (k !== 'ArrowDown') { e.preventDefault(); box.scrollBy({ top: box.clientHeight * 0.8 }); }
       return;
     }
     if (k === 'ArrowUp' || k === 'PageUp') {
-      var box2 = window.innerWidth <= 820 ? scrollWrap : main;
+      var box2 = window.innerWidth <= 920 ? scrollWrap : main;
       e.stopImmediatePropagation();
       if (k === 'PageUp') { e.preventDefault(); box2.scrollBy({ top: -box2.clientHeight * 0.8 }); }
       return;

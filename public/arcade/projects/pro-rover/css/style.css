@@ -65,7 +65,7 @@ body.poweron #stage{animation:power 700ms steps(14) both}
 #labels{display:flex;flex-wrap:wrap;gap:8px;pointer-events:auto}
 .tag{font:700 14px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--deep);background:var(--sand);padding:4px 8px;border:2px dashed var(--rust);cursor:help}
 .tip{border-bottom:2px dotted var(--teal);cursor:help;pointer-events:auto}
-#simbadge{position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:12;font:700 14px var(--mono);letter-spacing:.12em;color:var(--deep);background:var(--sun);padding:5px 10px;border:2px solid var(--deep);box-shadow:3px 3px 0 var(--rust);pointer-events:none}
+#simbadge{position:fixed;left:16px;bottom:14px;top:auto;transform:none;z-index:12;font:700 12px var(--mono);letter-spacing:.1em;color:var(--deep);background:var(--sun);padding:4px 9px;border:2px solid var(--deep);box-shadow:3px 3px 0 var(--rust);pointer-events:none}
 .mode-present #simbadge.hide,#simbadge.hide{display:none}
 #tip{position:fixed;z-index:40;max-width:320px;padding:10px 12px;background:var(--deep);color:var(--sand);border:2px solid var(--teal);font:700 15px/1.25 var(--mono);pointer-events:none;opacity:0;transition:opacity 120ms}
 #tip b{color:var(--teal);display:block}
