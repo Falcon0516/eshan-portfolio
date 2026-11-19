@@ -83,7 +83,7 @@
 
   function appendFlowBlock(container, flowText) {
     var raw = String(flowText || '').replace(/\n+/g, ' -> ').trim();
-    var nodes = raw.split(/\s*(?:->|→)\s*/).filter(Boolean);
+    var nodes = raw.split(/\s*(?:->|\u2192|\u2194)\s*/).filter(Boolean);
     if (nodes.length < 2) return false;
     var wrap = document.createElement('div');
     wrap.className = 'ch-flow';

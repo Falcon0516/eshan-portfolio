@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function appendFlowBlock(container, flowText) {
     const raw = String(flowText || '').replace(/\n+/g, ' -> ').trim();
-    const nodes = raw.split(/\s*(?:->|→)\s*/).filter(Boolean);
+    const nodes = raw.split(/\s*(?:->|\u2192|\u2194)\s*/).filter(Boolean);
     if (nodes.length < 2) return false;
     const wrap = document.createElement('div');
     wrap.className = 'ag-flow';

@@ -70,3 +70,20 @@ All checks below were run on branch `feature/arcade-merge` against a local produ
   - **Cross-Project Sound Persistence (`arc_snd`)**: Verified `localStorage['arc_snd'] === '1'` persists across Hub (`#bSnd`) -> `verifarm` (`#mbtn.on`) -> Hub -> `argus` (`#mBtn[aria-pressed="true"]`) -> `saathi` (`#ex-snd.on`).
   - **Desktop (`1280x720`, `1024x576`, `1440x900`) & Mobile (`390x844`) Top Dock & Viewport Audit (all 9 projects + Hub Boot + Pro Portfolio)**: Unified `#ex-top` dock (`PORTFOLIO`, `RESUME`, `EXPLAIN`, `TAKE ME TO PROJECT`, `?`, conditional `SND`) solves dynamically for free native top-bar width (`.ex-compact` at tight desktop widths, compact wrapped dock `<=920px`); verified 0 top-bar/control overlaps across all 9 showcases including `pro-rover` (`[CUT CABLE]` / `[RESET CRATE]` unobstructed), `personaforge`, and `axiom`; 0 horizontal overflow, `#ui > .toast` pointer interception resolved, VeriFarm `#badge` separated above `#dots`, and `saathi` `.bubble` horizontal layout fixed.
   - **AI Chatbot Engine (`/api/chat`, `agent.js`, `shared/chat.js`, `GuideBubble.jsx`)**: Safe-DOM formatting (bullet lists, bold labels, flow diagrams), `sessionStorage` conversation memory (`eshan_argus_history`, `arc_chat_<slug>`, `game_argus_history`) + `Clear`, canonical `[[ACTION:...]]` allowlisting (stripping injected malicious external URLs), and API input guardrails (`400` on unknown project or >500 chars; `503 { offline: true }` when `GROQ_API_KEY` unset).
+
+## 8. Groq Model Deprecation Fix & Live Failover Verification
+- **Root Cause Check**: Verified against `https://api.groq.com/openai/v1/models` and `/openai/v1/chat/completions` that the previously hardcoded `llama-3.1-8b-instant` model returns `HTTP 404` (`code: "model_not_found"`). Active high-context (`131072`) chat models available on the Groq key are `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, and `qwen/qwen3.8-27b` (`8,000 TPM`, `1,000 RPM` per model).
+- **API Route Updates (`src/app/api/chat/route.js`)**:
+  - Updated default `MODEL_CANDIDATES` chain to `process.env.GROQ_MODEL` (optional override) -> `openai/gpt-oss-120b` -> `openai/gpt-oss-20b` -> `qwen/qwen3.8-27b`, with `maxRetries: 0` on the `Groq` client so `404`/`429` responses immediately fail over to the next model's separate TPM pool instead of stalling inside SDK retries.
+  - Added compact core KB context for project-scoped prompts (`buildCompactCoreKb()`), explicit `Portfolio Game` routing in `MAIN_SYSTEM_PROMPT`, `allowExplain` scoping so `MODAL:explain` is only suggested inside Arcade project showcases, `<think>...</think>` tag stripping in `sanitizeReply()`, and bidirectional `↔` flow-arrow splitting in `agent.js`, `shared/chat.js`, and `GuideBubble.jsx`.
+- **Verification After Final Code Edit**:
+  - `npx eslint src/app/api/chat/route.js src/components/game/GuideBubble.jsx`: exited `0` (0 errors, 0 warnings).
+  - `npm run build` (Next.js `16.2.12` + `prebuild`): exited `0`.
+  - Live `next start` `/api/chat` verification with runtime `GROQ_API_KEY` env var (key not stored in repo):
+    - `GET /api/chat` -> `HTTP 200` (`{"ok":true,"configured":true,"model":"openai/gpt-oss-120b"}`).
+    - `POST /api/chat` (Executive Pro ARGUS + design registration + resume query) -> `HTTP 200`, formatted bullet response with `[[ACTION:MODAL|View Resume|resume]]`.
+    - `POST /api/chat` (`project: "Portfolio Game"`) -> `HTTP 200`, routed cleanly with `[[ACTION:ARCADE|Open Project Arcade|/arcade/index.html]]`.
+    - `POST /api/chat` (`project: "saathi"`) -> `HTTP 200`, structured technical pipeline bullets with `[[ACTION:MODAL|Open Explain Card|explain]]`.
+    - `POST /api/chat` (`project: "nonexistent-project"`) -> `HTTP 400` (`{"error":"Unknown project."}`).
+  - Playwright Desktop (`1280x720`, `1024x576`) & Mobile (`390x844`) suite (`verify_visual_all.mjs`): **52 PASS, 0 FAIL**.
+  - Repository secret scan (`grep -rnE "gsk_[A-Za-z0-9]{10,}" src/ public/ scripts/ TESTING.md`): `0` matches.

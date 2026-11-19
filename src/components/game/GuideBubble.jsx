@@ -130,7 +130,7 @@ function FormattedReply({ rawText, onAction }) {
       continue;
     }
 
-    if ((line.includes('→') || line.includes('->')) && line.split(/→|->/).filter(s => s.trim()).length >= 2) {
+    if ((line.includes('→') || line.includes('->') || line.includes('↔')) && line.split(/→|->|↔/).filter(s => s.trim()).length >= 2) {
       blocks.push({ kind: 'flow', raw: line });
       i++;
       continue;
@@ -186,7 +186,7 @@ function FormattedReply({ rawText, onAction }) {
           );
         }
         if (blk.kind === 'flow') {
-          const nodes = blk.raw.split(/→|->/).map(s => s.trim()).filter(Boolean);
+          const nodes = blk.raw.split(/→|->|↔/).map(s => s.trim()).filter(Boolean);
           return (
             <div key={idx} className="guide-flow">
               {nodes.map((node, j) => (
