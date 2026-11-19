@@ -1,0 +1,580 @@
+{
+  "saathi": {
+    "slug": "saathi",
+    "title": "SAATHI",
+    "line": "A voice-AI phone assistant that answers real calls in English, Hindi and Kannada.",
+    "achievements": [
+      {
+        "t": "2nd Place, AI-STHETICA AIVORA 2026",
+        "s": "SJBIT"
+      },
+      {
+        "t": "2nd Place, Innovathon IMPULSE 6.0",
+        "s": "SJBIT"
+      }
+    ],
+    "stack": [
+      "Python",
+      "Rust",
+      "Tauri",
+      "React",
+      "Kotlin",
+      "Swift",
+      "Groq",
+      "Sarvam AI",
+      "Whisper",
+      "Piper",
+      "SQLite"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Small businesses and individuals miss calls or serve callers in different languages.",
+          "Telephony APIs cost money; the aim was real calls without paid telephony.",
+          "First target: health screening for feature-phone users."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "An agent that answers a real phone call and replies in the caller's own language: English, Hindi or Kannada.",
+          "Version 1 in Python: controls an Android phone with ADB and Scrcpy, using Groq with Whisper and Piper.",
+          "Version 2 in Rust and Tauri: a desktop app (VoidRelay) with Android and iOS companion apps (VoidCaller).",
+          "Offline mode with local Whisper, Ollama and Piper."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "Phone connects to the PC over WebSocket on port 7331 with a 10 s heartbeat.",
+          "Audio is captured into a lock-free ring buffer.",
+          "Voice activity detection: speech of 300 ms or more starts an utterance; 800 ms of silence ends it.",
+          "The mic is muted while the AI speaks, so it never hears itself.",
+          "Speech to text: Sarvam online, or whisper-rs offline.",
+          "LLM: Groq Llama 3.3 70B streaming, or Ollama Llama 3.2 3B offline.",
+          "Text to speech: Sarvam Bulbul (Hindi, Kannada) or local Piper.",
+          "Each finished sentence goes to speech at once, so the caller hears the first sentence early.",
+          "An engine router picks online or offline and checks Groq reachability every 30 s."
+        ]
+      },
+      {
+        "h": "HIGHLIGHTS",
+        "pts": [
+          "Version 1 responded in around 300 ms [author tests, not an audited benchmark]",
+          "Call state machine from Idle to Ended with eight states.",
+          "SQLite call history and an optional Telegram bot (/call, /hangup, /mode, /say).",
+          "Registry of 18 models with a hardware profiler that recommends downloads.",
+          "The call and voice pipeline was reused in KAVACH and VeriFarm."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Saathi",
+      "persona": "Warm, steady switchboard operator who speaks in clear short lines."
+    }
+  },
+  "argus": {
+    "slug": "argus",
+    "title": "ARGUS",
+    "line": "A multi-camera AI surveillance platform that runs on an 8 GB MacBook.",
+    "achievements": [
+      {
+        "t": "Indian Design Registration 515509-001",
+        "s": "Accepted and published, Patent Office Journal 41/2026. Filed jointly with five co-applicants."
+      },
+      {
+        "t": "Final Year Project",
+        "s": "SJB Institute of Technology"
+      }
+    ],
+    "stack": [
+      "Python",
+      "FastAPI",
+      "Next.js",
+      "YOLOv8",
+      "Groq vision models",
+      "InsightFace",
+      "SQLite",
+      "WebSocket"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Security teams and law enforcement cannot watch dozens of camera feeds at once.",
+          "Sending every frame to a cloud model is far too costly and slow."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "Operators search every camera by description, face photo or number plate instead of scrubbing footage.",
+          "Up to six camera slots: phones, IP cameras, RTSP, USB and video files.",
+          "A Next.js dashboard with live frames, events and system telemetry."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "A worker per camera keeps only the newest frame, downscaled to 640x360.",
+          "One shared YOLOv8n watches every feed and counts people and vehicles.",
+          "Four triggers wake the cloud: count change, scene change, 20 s heartbeat, active search.",
+          "Stage 1: a vision-language model names up to three specialist detectors for the scene.",
+          "Specialists load on demand: three in memory, least recently used leaves.",
+          "Stage 2: the cropped detection is checked again by a second model call to cut false alarms.",
+          "Events are de-duplicated within 10 s, saved with two evidence images, and stored in SQLite.",
+          "Search by face (ArcFace), by clothing fingerprint when the face is hidden, or by plate OCR.",
+          "A router spreads load across 20 API keys with cooldown and failover."
+        ]
+      },
+      {
+        "h": "RESULTS",
+        "pts": [
+          "971 cloud calls instead of 466,523 for per-frame streaming, 99.8% fewer [2-hour field run, 3 phone cameras]",
+          "Peak backend memory 1,078 MB against about 5,650 MB for loading every model [same run]",
+          "Stage 2 suppressed 2 of 4 specialist triggers as false alarms [same run]",
+          "Edge detector: 19.9 ms per frame, about 50 FPS [M1, 8 GB]",
+          "Cross-camera search followed one suspect through 31 transitions in 10 min 58 s [same run]"
+        ]
+      }
+    ],
+    "character": {
+      "name": "Argus",
+      "persona": "Observant watchman who tracks camera feeds and hates wasted cloud calls."
+    }
+  },
+  "soil-and-toil": {
+    "slug": "soil-and-toil",
+    "title": "SOIL & TOIL",
+    "line": "Soil nitrogen, phosphorus, potassium and pH from one phone photo.",
+    "achievements": [
+      {
+        "t": "Solo personal project",
+        "s": "Built for my father's farmland"
+      }
+    ],
+    "stack": [
+      "Python",
+      "PyTorch",
+      "FastAPI",
+      "Redis",
+      "scikit-learn",
+      "NumPy",
+      "pandas",
+      "SciPy",
+      "Groq"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Farmers cannot easily reach or afford soil-testing labs.",
+          "Lab results are slow, and fertiliser is often guessed."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "One phone photo gives nitrogen, phosphorus, potassium, pH and soil type.",
+          "Fertiliser advice for 30 crops in English, Hindi and Kannada.",
+          "A web app with a background job queue and live progress."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "The browser sends photo, location, crop, acreage and language; progress is polled every 2 s.",
+          "The photo is resized to 512x512 and white-balanced.",
+          "An MST++ transformer rebuilds a spectrum from RGB; the near-infrared part is extrapolated.",
+          "Smoothing, scaling and derivatives give 188 features; PCA cuts them to 30.",
+          "pH and soil type are predicted first, because pH changes nutrient availability.",
+          "NPK comes from a PLSR plus 1D-CNN ensemble; 50 dropout passes give a 95% confidence range.",
+          "Weather and soil context from Open-Meteo and SoilGrids; deficit compared with the chosen crop.",
+          "Groq writes the advice in the chosen language, with a static fallback plan."
+        ]
+      },
+      {
+        "h": "DATA AND SCALE",
+        "pts": [
+          "Cleaned OSSL, AfSIS and Kaggle data; 10-fold cross-validation.",
+          "32 saved end-to-end analysis runs.",
+          "Heuristic fallbacks if model weights are missing."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Mitti",
+      "persona": "Grounded, practical soil guide built for real farmland decisions."
+    }
+  },
+  "axiom": {
+    "slug": "axiom",
+    "title": "AXIOM",
+    "line": "A payment safety layer for AI agents that pay for APIs on their own.",
+    "achievements": [
+      {
+        "t": "3rd Place, HACK.ALGO 2026",
+        "s": "Google Developer Groups, REVA University, National"
+      },
+      {
+        "t": "Red-team attacks blocked",
+        "s": "Simulated attacks on the SDK"
+      }
+    ],
+    "stack": [
+      "Python",
+      "FastAPI",
+      "Algorand",
+      "Puya",
+      "scikit-learn",
+      "React"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Agents that pay for APIs can overspend, pay fake endpoints or be hijacked.",
+          "Teams need to give agents spending power with limits that are enforced."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "A governance and audit layer on HTTP 402 (Payment Required), built with team CleverFyre.",
+          "Six Algorand Testnet contracts: PolicyVault, IntentRegistry, SentinelEscrow, PaymentDNARegistry, ConsensusVault, ReputationLedger.",
+          "An SDK for identity, intent, anomaly and semantic checks, plus a dashboard."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "The server answers 402; the agent starts the checks before paying.",
+          "Identity: key derived from the agent's source code, so changed code means a new address.",
+          "Intent: a JSON record of what, why and how much, sealed in a Merkle tree; only the 32-byte root goes on-chain.",
+          "Dead Man's Switch: if the agent goes silent, its cap steps from normal to 1 ALGO, 0.1 ALGO, then frozen.",
+          "Semantic router compares the API URL with approved categories, offline.",
+          "Anomaly checks: burst limit plus an Isolation Forest.",
+          "Escrow holds funds; optional M-of-N peer approval.",
+          "An SLA oracle checks status, latency and valid JSON, then releases or refunds."
+        ]
+      },
+      {
+        "h": "EVIDENCE",
+        "pts": [
+          "Stress test: 4 of 4 scenarios passed.",
+          "Red-team: 5 of 6 attacks blocked [report.json]",
+          "55 saved intent documents.",
+          "Six contracts deployed on Algorand Testnet."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Bouncer Bot",
+      "persona": "Strict vault doorman who checks every agent's budget and intent before paying."
+    }
+  },
+  "personaforge": {
+    "slug": "personaforge",
+    "title": "PERSONAFORGE",
+    "line": "A visual studio for building consistent AI personalities without writing prompts.",
+    "achievements": [
+      {
+        "t": "Deployed on Vercel",
+        "s": "persona--forge.vercel.app"
+      }
+    ],
+    "stack": [
+      "TypeScript",
+      "Next.js",
+      "Redis",
+      "FastAPI",
+      "Groq",
+      "Sarvam AI",
+      "Twilio"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Hand-written chatbot prompts are fragile and contradict themselves.",
+          "Nobody can trace why a bot behaves the way it does."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "A no-code studio: assemble behaviour from 144 blocks in 15 categories, or start from 12 templates.",
+          "One persona runs as web chat, a widget, a browser voice agent or a WhatsApp bot."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "A TypeScript compiler turns blocks into a deterministic 11-section prompt.",
+          "Every line is traced back to the block that produced it.",
+          "Conflicts are detected, such as voice mode with markdown, each with a one-click fix.",
+          "A 0 to 100 score covers nine checks, such as role, guardrails and fallbacks.",
+          "A token budget drops the lowest-priority lines first.",
+          "Answers stream by SSE; the first sentence starts speaking early.",
+          "Voice agent: record, transcribe, speak, and a second tap interrupts instantly.",
+          "A pool of up to ten Groq keys with cooldowns spreads the load.",
+          "WhatsApp gateway acknowledges at once, then handles text, images and voice notes."
+        ]
+      },
+      {
+        "h": "QUALITY",
+        "pts": [
+          "11 test files across 3 workspaces; 79 of 79 passing [author's report]"
+        ]
+      }
+    ],
+    "character": {
+      "name": "Forge",
+      "persona": "Cheerful workshop robot who cares about deterministic prompts and clear rules."
+    }
+  },
+  "kavach": {
+    "slug": "kavach",
+    "title": "KAVACH",
+    "line": "An AI-agent platform for emergencies: one trigger starts six agents at once.",
+    "achievements": [
+      {
+        "t": "Built for Sentinel Hack 6.0",
+        "s": "KSIT Bengaluru, April 2026"
+      }
+    ],
+    "stack": [
+      "Python",
+      "LangGraph",
+      "FastAPI",
+      "PWA",
+      "Groq",
+      "Twilio",
+      "YOLOv8",
+      "Tailscale"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "In danger, nobody can open five apps and make five calls.",
+          "Feature-phone users have no app to open at all."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "Guardian, a phone app with five triggers: SOS button, the word \"kavach\", shake, triple volume press and an overdue SafeWalk timer.",
+          "If the backend does not answer in 3 seconds, the app falls back to the phone's SMS.",
+          "A keypad phone can trigger it with a normal call or SMS.",
+          "A Command Center that shows each agent thinking live."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "A LangGraph supervisor fans out to six agents in parallel.",
+          "Threat: scores severity with a 70B model.",
+          "Family alert: WhatsApp messages through Twilio.",
+          "FIR: drafts a police report with relevant IPC sections.",
+          "Navigation: nearest police, hospital and safe house by Haversine distance.",
+          "ARGUS agent: reads camera streams for people, faces and plates.",
+          "NCRB agent: adds crime-hotspot context.",
+          "A call bridge reads the call queue every 2 s and speaks the brief to police."
+        ]
+      },
+      {
+        "h": "CARE",
+        "pts": [
+          "Audio, location and CCTV are sensitive data.",
+          "False triggers can waste emergency resources.",
+          "AI-drafted FIRs must be reviewed by a human."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Kavach",
+      "persona": "Alert, protective shield hero focused on rapid response and careful human review."
+    }
+  },
+  "pro-rover": {
+    "slug": "pro-rover",
+    "title": "PRO-ROVER",
+    "line": "The software for a low-cost autonomous farm rover: no LiDAR, no Jetson, no RTK.",
+    "achievements": [
+      {
+        "t": "2nd Place, InnovateX",
+        "s": "SJBIT, 70+ teams"
+      }
+    ],
+    "stack": [
+      "Arduino C++",
+      "Python",
+      "Kotlin",
+      "Groq",
+      "Leaflet",
+      "Tailscale"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Field robotics is out of reach for small farms and student labs.",
+          "Most rovers need costly sensors and computers."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "An Arduino drives two motors and reads three ultrasonic sensors.",
+          "An ordinary Android phone is the radio, GPS and accelerometer hub.",
+          "A laptop does the thinking and shows a Leaflet map cockpit."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "The Arduino reads left, middle and right sonar in turn; a full reading every 150 ms.",
+          "The phone relays serial data over Wi-Fi through the USB-TCP Bridge, linked by Tailscale.",
+          "A 10 Hz loop computes bearing and distance to the next GPS waypoint.",
+          "A PID controller holds the heading on a straight line.",
+          "Safety layer: slow below 50 cm, stop below 15 cm, clears at 25 cm.",
+          "A 1 second sensor watchdog stops the rover if data goes quiet.",
+          "v3.0 adds an LLM tool-calling loop and a vision thread as an agentic experiment."
+        ]
+      },
+      {
+        "h": "BUILT AND TESTED",
+        "pts": [
+          "18 unit tests for navigation maths: geodesic distance, arrival, heading, noise rejection.",
+          "v2.0 is the deterministic system I would trust in the field."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Rovy",
+      "persona": "Scrappy field rover proud of stopping before obstacles without expensive LiDAR."
+    }
+  },
+  "usb-tcp-bridge": {
+    "slug": "usb-tcp-bridge",
+    "title": "USB-TCP BRIDGE",
+    "line": "An Android app that turns a phone into a wireless hub for a robot controller.",
+    "achievements": [
+      {
+        "t": "2nd Place, InnovateX",
+        "s": "SJBIT, 70+ teams, with the Agronym Rover"
+      }
+    ],
+    "stack": [
+      "Kotlin",
+      "Arduino C++",
+      "Python",
+      "USB-OTG",
+      "TCP",
+      "Groq"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Robot controllers need a wire, a laptop or an expensive radio.",
+          "Small farms and student labs need something affordable."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "A native Kotlin app: plug a phone into an Arduino or ESP32 over USB-OTG and it becomes a Wi-Fi bridge.",
+          "It forwards bytes both ways between the serial port and a TCP port.",
+          "It streams the phone's accelerometer, gyroscope and GPS on their own ports."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "Plugging in a supported USB-serial chip launches the service, even with the UI closed.",
+          "A foreground service holds a CPU wake lock and a Wi-Fi lock to keep running with the screen off.",
+          "Four TCP servers: bridge (1234), telemetry (8001), GPS (8002), ultrasonic (8004).",
+          "Bytes are split on newlines; lines starting US: go to the ultrasonic port, the rest to the bridge.",
+          "Two bounded queues of 1000 items drop the oldest data so latency stays low.",
+          "Fail-safe: if the control connection drops, the app sends M:0,0 and the motors stop."
+        ]
+      },
+      {
+        "h": "FIT",
+        "pts": [
+          "It is the phone half of the Pro-Rover.",
+          "Auto-start on USB attach for FTDI, CP210x, PL2303, CH34x, Arduino, Teensy and more."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Plug",
+      "persona": "Crisp hardware-bridge connector who speaks cleanly in ports and packet queues."
+    }
+  },
+  "verifarm": {
+    "slug": "verifarm",
+    "title": "VERIFARM",
+    "line": "Farm-to-fork traceability on a shared blockchain, so farmers keep fair value.",
+    "achievements": [
+      {
+        "t": "1st Place, ADVAYA Hackathon 2.0",
+        "s": "BGSCET, National"
+      }
+    ],
+    "stack": [
+      "Hyperledger Fabric",
+      "Go",
+      "Express",
+      "FastAPI",
+      "React Native",
+      "PostgreSQL",
+      "scikit-learn"
+    ],
+    "sections": [
+      {
+        "h": "THE PROBLEM",
+        "pts": [
+          "Farmers lose fair value because buyers cannot verify where produce came from.",
+          "Middlemen can exploit the mandi system."
+        ]
+      },
+      {
+        "h": "WHAT I BUILT",
+        "pts": [
+          "A shared record that follows produce from farm to consumer across six organisations: government, mandi, farmer co-op, transporter, processor, retailer.",
+          "Six Go chaincodes, an Isolation Forest fraud detector and an 8-role mobile app in Kannada, Hindi and English.",
+          "Consumers can trace packaged food by QR code."
+        ]
+      },
+      {
+        "h": "HOW IT WORKS",
+        "pts": [
+          "A farmer gets an ID; Aadhaar and mobile are stored only as SHA-256 hashes.",
+          "Each harvest becomes a token with quantity and season.",
+          "Mandi sales below the minimum support price are blocked or flagged.",
+          "Transport is checked with Haversine distance; a deviation above 50 km is flagged.",
+          "Processing yield must fall in a realistic range, such as 82 to 88% for ragi.",
+          "A trust score rises with good deliveries and falls with violations.",
+          "Detectors run every 30 minutes and 6 hours and push alerts to government users.",
+          "Notifications try voice, then WhatsApp, then SMS."
+        ]
+      },
+      {
+        "h": "STACK",
+        "pts": [
+          "Fabric with Raft ordering and CouchDB.",
+          "Node.js, Express, GraphQL, Socket.IO, PostgreSQL with 13 tables.",
+          "Turborepo monorepo with Docker."
+        ]
+      }
+    ],
+    "character": {
+      "name": "Ragi Raja",
+      "persona": "Steady mandi guide focused on fair value for farmers and verified crop records."
+    }
+  }
+}
